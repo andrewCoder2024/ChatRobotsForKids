@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import stt, tts
+from DiabloGPT import Chat
+
 
 class Chatbot:
     def __init__(self) -> None:
         self.listener = stt.Listener()
         self.speaker = tts.Speaker()
+        self.chat = Chat()
 
     def say(self, text, speed = 1):
-        self.speaker.speak(text, speed)
+        self.chat.raw(text)
+        self.speaker.speak(self.chat.generated_text(), speed)
         
     def listen(self):
         return self.listener.listens()
