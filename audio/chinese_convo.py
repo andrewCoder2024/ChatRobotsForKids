@@ -3,20 +3,20 @@ import requests
 
 answer = ''
 
-while True:
+
+def chinese_chatbot():
     text = input("User: ")
+
+    if text == '再见':
+        return 'bye'
     sess = requests.get('https://api.ownthink.com/bot?spoken=' + text)
 
     answer = sess.text
 
     answer = json.loads(answer)
 
-    answer = answer["data"]["info"]['text']
+    return answer["data"]["info"]['text']
 
-    print("Chatbot: " + answer)
-
-    if text == '再见':
-        break
 
 """
 {

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import stt, tts
-from DiabloGPT import Chat
-import pandas as pd
 import random
+import pandas as pd
+import stt
+import tts
+from DiabloGPT import Chat
+from chinese_convo import chinese_chatbot
+from language_detect import detect_language
 
 
 class Chatbot:
@@ -13,11 +16,15 @@ class Chatbot:
         self.speaker = tts.Speaker()
         self.chat = Chat()
         self.isActing = True
+        self.isChinese = False
 
     def say(self, text, speed=1, generator=False):
         if generator:
-            self.chat.raw(text)
-            self.speaker.speak(self.chat.generated_text(), speed)
+            if self.isChinese:
+                self.speaker.speak(chinese_chatbot(text), speed)
+            else:
+                self.chat.raw(text)
+                self.speaker.speak(self.chat.generated_text(), speed)
         else:
             self.speaker.speak(self, text, speed)
 
@@ -70,9 +77,8 @@ class Quiz(Chatbot):
         for s in score:
             tts.tts("You got a score of {} in #{} test".format(s, n))
             if self.isActing:
-                 gesture.happy() if s > .8 else gesture.sad()
+                gesture.happy() if s > .8 else gesture.sad()
             n += 1
-
 
 
 def get_quiz_info(chatbot):
@@ -109,7 +115,10 @@ def main():
     try:
         while True:
             text = pi.listen()
-            if text.contains("start" and "quiz"):
+            if detect_language(text) == 'cn':
+                pi.isChinese = True
+                pi.say(text,generator=True)
+            elif text.contains("start" and "quiz"):
                 attrs = list(get_quiz_info(pi))
                 quizzer = Quiz(attrs[0], attrs[1], attrs[2])
                 quizzer.init_quiz()
