@@ -4,11 +4,7 @@ import requests
 answer = ''
 
 
-def chinese_chatbot():
-    text = input("User: ")
-
-    if text == '再见':
-        return 'bye'
+def chinese_chatbot(text):
     sess = requests.get('https://api.ownthink.com/bot?spoken=' + text)
 
     answer = sess.text
@@ -17,6 +13,9 @@ def chinese_chatbot():
 
     return answer["data"]["info"]['text']
 
+if __name__ == '__main__':
+    text = input("User: ")
+    print(chinese_chatbot(text))
 
 """
 {
