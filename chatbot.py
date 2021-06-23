@@ -156,6 +156,10 @@ def main():
                 elif text == "bye":
                     pi.say("goodbye")
                     exit()
+                elif text == "yes":
+                    gesture.correct()
+                elif text == 'no':
+                    gesture.incorrect()
                 else:
                     pi.say(text, generator=True)
     except KeyboardInterrupt:
