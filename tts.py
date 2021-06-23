@@ -4,11 +4,11 @@
 import google.cloud.texttospeech as gtts
 import os
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/Users/momoe/Documents/GitHub/ChatRobotsForKids/audio/key.json"
-
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/Users/momoe/Documents/GitHub/ChatRobotsForKids/key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
 
 class Speaker:
-    def __init__(self, lang='cn') -> None:
+    def __init__(self, lang='en') -> None:
         self.lang = lang
         self.voice_params = gtts.VoiceSelectionParams(
             language_code='en-US', name="en-US-Wavenet-F"
@@ -41,18 +41,18 @@ class Speaker:
     def speak(self, text, speed = 1):
         if self.lang == 'en':
             self.text_to_wav(text)
-            os.system("afplay audio-en.wav")
-            #os.system("play -q audio-en.wav speed " + str(speed))
+            #os.system("afplay audio-en.wav")
+            os.system("play -q audio-en.wav -t alsa speed " + str(speed))
         elif self.lang == 'cn':
             self.text_to_wav(text)
-            os.system("afplay audio-cn.wav")
-            #os.system("play -q audio-cn.wav speed " + str(speed))
+            #os.system("afplay audio-cn.wav")
+            os.system("play -q audio-cn.wav -t alsa speed " + str(speed))
         else:
             return "Unsupported language"
 
 
 if __name__ == "__main__":
     pi = Speaker()
-    pi.speak("I am happy", 1.4)
+    pi.speak("I am happy", 1.2)
     pi.change_lang('cn')
     pi.speak("我不开心", 0.85)

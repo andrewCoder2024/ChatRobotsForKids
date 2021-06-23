@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# from ctypes import *
-# from contextlib import contextmanager
+from ctypes import *
+from contextlib import contextmanager
 import speech_recognition as sr
 
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
@@ -64,10 +64,10 @@ class Listener:
         if self.lang == 'en':
             lang = "en-US"
         else:
-            lang = "zh"
+            lang = "cmn-Hans-CN"
 
         try:
-            response["transcription"] = self.recognizer.recognize_google(audio, lang)
+            response["transcription"] = self.recognizer.recognize_google(audio, language = lang)
         except sr.RequestError:
             # API was unreachable or unresponsive
             response["success"] = False
@@ -92,6 +92,8 @@ if __name__ == "__main__":
     #PROMPT_LIMIT = 10
     
     pi = Listener()
+    print(pi.listens())
+    pi.change_lang('cn')
     print(pi.listens())
 
     # for i in range(PROMPT_LIMIT):

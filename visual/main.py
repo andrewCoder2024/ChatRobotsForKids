@@ -1,4 +1,3 @@
-
 import time
 from rpi_ws281x import Adafruit_NeoPixel, Color
 import RPi.GPIO as GPIO
