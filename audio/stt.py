@@ -20,10 +20,11 @@ def noalsaerr():
     asound.snd_lib_error_set_handler(None)
 
 class Listener:
-    def __init__(self) -> None:
+    def __init__(self, lang = 'en') -> None:
         self.recognizer = sr.Recognizer()
         with noalsaerr():
             self.microphone = sr.Microphone(device_index=0)
+        self.lang = lang
 
     def listens(self):
         """Transcribe speech from recorded from `microphone`.
@@ -60,8 +61,13 @@ class Listener:
         # try recognizing the speech in the recording
         # if a RequestError or UnknownValueError exception is caught,
         #     update the response object accordingly
+        if self.lang == 'en':
+            lang = "en-US"
+        else:
+            lang = "zh"
+
         try:
-            response["transcription"] = self.recognizer.recognize_google(audio)
+            response["transcription"] = self.recognizer.recognize_google(audio, lang)
         except sr.RequestError:
             # API was unreachable or unresponsive
             response["success"] = False
@@ -78,6 +84,9 @@ class Listener:
             return "I didn't catch that. Say again?"
         else:
             return "I have encountered an error"
+
+    def change_lang(self, lang):
+        self.lang = lang
 
 if __name__ == "__main__":
     #PROMPT_LIMIT = 10

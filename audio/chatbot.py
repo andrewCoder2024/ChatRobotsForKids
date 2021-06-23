@@ -9,21 +9,21 @@ from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 from language_detect import detect_language
 
-
 class Chatbot:
-    def __init__(self) -> None:
+    def __init__(self, isActing=True, sLang='en', lLang = 'en') -> None:
         self.listener = stt.Listener()
         self.speaker = tts.Speaker()
         self.chat = Chat()
-        self.isActing = True
-        self.isChinese = False
+        self.isActing = isActing
+        self.speaker_lang = sLang
+        self.listener_lang = lLang
 
     def say(self, text, speed=1, generator=False):
         if generator:
-            if self.isChinese:
+            if self.speaker_lang == 'cn':
                 self.speaker.speak(chinese_chatbot(text), speed)
             else:
-                self.chat.raw(text)
+                self.chat.raw(text) # from GPT
                 self.speaker.speak(self.chat.generated_text(), speed)
         else:
             self.speaker.speak(self, text, speed)
@@ -31,6 +31,13 @@ class Chatbot:
     def listen(self):
         return self.listener.listens()
 
+    def change_speaker_lang(self, lang='en'):
+        self.speaker.change_lang(lang)
+        self.speaker_lang = lang
+
+    def change_listener_lang(self, lang='en'):
+        self.listener.change_lang(lang)
+        self.listener_lang = lang
 
 class Quiz(Chatbot):
     def __init__(self, num_words=10, level=1, pos=0):
@@ -61,25 +68,25 @@ class Quiz(Chatbot):
         temp_li = []
         score = []
         Quiz.get_words(self)
-        repeat = True
         for word in self.quiz_list.rows:
             temp_li.append((word['chinese'], word['english']))
+        Quiz.change_listener_lang(self, 'cn')
         while temp_li or not num:
             li_len = len(temp_li)
             random.shuffle(temp_li)
             for el in temp_li:
-                Quiz.say(self, "Please provide the definition of" + el[0] + "in english")  # el[0] is in chinese
+                Quiz.say(self, "Please provide the definition of" + el[1] + "in chinese")  # el[0] is in chinese
+                # can' mix languages
                 user_input = Quiz.listen(self)
                 score[num] += 1, temp_li.remove(el) if user_input == el[1] else score
-            score[num] /= li_len
             num += 1
         n = 1
         for s in score:
-            tts.tts("You got a score of {} in #{} test".format(s, n))
+            tts.speak("You got a score of {} in #{} test".format(s, n))
             if self.isActing:
-                gesture.happy() if s > .8 else gesture.sad()
+                gesture.pass_quiz() if s > .8 else gesture.fail_quiz()
             n += 1
-
+        Quiz.change_listener_lang(self, 'en')
 
 def get_quiz_info(chatbot):
     chatbot.say("What is your hsk level?")
@@ -115,20 +122,34 @@ def main():
     try:
         while True:
             text = pi.listen()
-            if detect_language(text) == 'cn':
-                pi.isChinese = True
-                pi.say(text,generator=True)
-            elif text.contains("start" and "quiz"):
-                attrs = list(get_quiz_info(pi))
-                quizzer = Quiz(attrs[0], attrs[1], attrs[2])
-                quizzer.init_quiz()
-                pi.say("Quiz completed")
-            elif text == "bye":
-                pi.say("goodbye")
-                exit()
+            if pi.isChinese:
+                if "换成" and "英文" in text:
+                    pi.change_speaker_lang('en')
+                    pi.say(text, generator=True)
+                elif "开始" and "测验" in text:
+                    pass
+                    # bot asks in chinese, user replies in english
+                    pi.say("测验结束")
+                elif text == "再见":
+                    pi.say("下次见")
+                    exit()
+                else:
+                    pi.say(text, generator=True)
             else:
-                pi.say(text, generator=True)
-
+                if "switch" and "chinese" in text:
+                    pi.change_speaker_lang('cn')
+                    pi.say(text, generator=True)
+                elif "start" and "quiz" in text:
+                    # bot asks in english, user replies in chinese
+                    attrs = list(get_quiz_info(pi))
+                    quizzer = Quiz(attrs[0], attrs[1], attrs[2])
+                    quizzer.init_quiz()
+                    pi.say("Quiz completed")
+                elif text == "bye":
+                    pi.say("goodbye")
+                    exit()
+                else:
+                    pi.say(text, generator=True)
             print(text)
     except KeyboardInterrupt:
         pass
