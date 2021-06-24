@@ -91,22 +91,22 @@ class Quiz(Chatbot):
                     if user_input == el[0]:
                         score[num] += 1
                         temp_li.remove(el)
-                        gesture.correct()
+                        gesture.correct(2)
                     else:
-                        gesture.incorrect()
+                        gesture.incorrect(2)
                 else:
                     if user_input == el[1]:
                         score[num] += 1
                         temp_li.remove(el)
-                        gesture.correct()
+                        gesture.correct(2)
                     else:
-                        gesture.incorrect()
+                        gesture.incorrect(2)
             num += 1
         n = 1
         for s in score:
             Quiz.say(self, "You got a score of {} in #{} test".format(s, n))
             if self.isActing:
-                gesture.correct() if s > .8 else gesture.incorrect()
+                gesture.pass_quiz(2) if s > .8 else gesture.fail_quiz(2)
             n += 1
         Quiz.change_speaker_lang(self, self.speaker_lang)
         Quiz.change_listener_lang(self, self.listener_lang)
@@ -189,9 +189,9 @@ def main():
                     pi.say("goodbye")
                     exit()
                 elif text == "yes":
-                    gesture.correct()
+                    gesture.correct(2)
                 elif text == 'no':
-                    gesture.incorrect()
+                    gesture.incorrect(2)
                 else:
                     pi.say(text, generator=True)
     except KeyboardInterrupt:
