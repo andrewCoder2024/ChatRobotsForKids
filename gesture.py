@@ -36,17 +36,18 @@ GPIO.setup(DL,GPIO.IN,GPIO.PUD_UP)
 pwm = PCA9685(0x40)
 pwm.setPWMFreq(50)
 
-def correct():
+def correct(duration=float('inf')):
     rgb = (0<<16) | (255<<8) | 0
     try:
         pulse = 1500
         offset = 25
         pwm.setServoPulse(0, 1500)
-        while True:
+        endTime = time.time() + duration
+        while time.time() < endTime:
             breathing_lights(rgb, 5)
-            if pulse > 2000:
+            if pulse > 1900:
                 offset = -25
-            elif pulse < 1500:
+            elif pulse < 1600:
                 offset = 25
             pwm.setServoPulse(1,pulse)
             time.sleep(0.02)
@@ -55,19 +56,20 @@ def correct():
         pwm.setServoPulse(0,0)
         pwm.setServoPulse(1,0)
 
-def incorrect():
+def incorrect(duration=float('inf')):
     rgb = (255<<16) | (0<<8) | 0
     try:
         pulse = 1300
-        offset = 10
+        offset = 20
         pwm.setServoPulse(1,2250)
         time.sleep(0.05)
-        while True:
+        endTime = time.time() + duration
+        while time.time() < endTime:
             breathing_lights(rgb, 3)
-            if pulse > 1700:
-                offset = -10
-            elif pulse < 1300:
-                offset = 10
+            if pulse > 1600:
+                offset = -20
+            elif pulse < 1400:
+                offset = 20
             pwm.setServoPulse(0,pulse)
             time.sleep(0.02)
             pulse = pulse + offset
@@ -76,9 +78,10 @@ def incorrect():
         pwm.setServoPulse(1,0)
 
 def pass_quiz():
-    Ab.right()
-    time.sleep(3)
-    Ab.stop()
+    pass
+    #Ab.right()
+    #time.sleep(3)
+    #Ab.stop()
     
 def fail_quiz():
     pass
@@ -96,10 +99,22 @@ def breathing_lights(rgb, speed):
     x += speed
     if x >= 200:
         x = 0
+
+def stop_robot():
+    for i in range(0, strip.numPixels()):
+        strip.setPixelColor(i, 0)
+        strip.show()
+    pwm.setServoPulse(0,1500)
+    time.sleep(0.2)
+    pwm.setServoPulse(1,1500)
+    time.sleep(0.2)
+    pwm.setServoPulse(0,0)
+    time.sleep(0.2)
+    pwm.setServoPulse(1,0)
+    time.sleep(0.2)
                     
 if __name__=="__main__":
-    pass_quiz()
-    #correct()
-    #time.sleep(3)
-    #incorrect()
-    #time.sleep(3)
+    correct(3)
+    stop_robot()
+    incorrect(3)
+    stop_robot()
