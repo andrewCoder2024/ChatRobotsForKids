@@ -8,6 +8,7 @@ import tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 import gesture
+from audio import media_translation
 
 
 class Chatbot:
@@ -164,9 +165,13 @@ def main():
                     pi.change_listener_lang('en')
                     pi.say(text, generator=True)
                 elif "开始" and "测验" in text:
-                    pass
-                    # bot asks in chinese, user replies in english
-                    pi.say("测验结束")
+                    attrs = list(get_quiz_info(pi, 10000))
+                    quizzer = Quiz(attrs[0], attrs[1], attrs[2])
+                    quizzer.init_quiz()
+                elif "翻译" in text:
+                    pi.say("请说一句话，我要把它翻译成英文！")
+                    to_translate = pi.listen()
+                    pi.say(media_translation.translate_text('cn','en-US',to_translate))
                 elif text == "再见":
                     pi.say("下次见")
                     exit()
@@ -185,6 +190,10 @@ def main():
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
                     quizzer.init_quiz()
                     pi.say("Quiz completed")
+                elif "translate" in text:
+                    pi.say("Please say a word, I'll translate it into Chinese")
+                    to_translate = pi.listen()
+                    pi.say(media_translation.translate_text('en-US','cn',to_translate))
                 elif text == "bye":
                     pi.say("goodbye")
                     exit()
