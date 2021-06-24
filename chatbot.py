@@ -91,10 +91,16 @@ class Quiz(Chatbot):
                     if user_input == el[0]:
                         score[num] += 1
                         temp_li.remove(el)
+                        gesture.correct()
+                    else:
+                        gesture.incorrect()
                 else:
                     if user_input == el[1]:
                         score[num] += 1
                         temp_li.remove(el)
+                        gesture.correct()
+                    else:
+                        gesture.incorrect()
             num += 1
         n = 1
         for s in score:
