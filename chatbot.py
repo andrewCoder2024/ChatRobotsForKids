@@ -5,15 +5,16 @@ import random
 import pandas as pd
 import stt
 import tts
-#from DiabloGPT import Chat
+# from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 import gesture
+
 
 class Chatbot:
     def __init__(self, isActing=True, sLang='en', lLang='en'):
         self.listener = stt.Listener()
         self.speaker = tts.Speaker()
-        #self.chat = Chat()
+        # self.chat = Chat()
         self.isActing = isActing
         self.speaker_lang = sLang
         self.listener_lang = lLang
@@ -25,8 +26,8 @@ class Chatbot:
             else:
                 pass
                 self.speaker.speak(text, speed)
-                #self.chat.raw(text) # from GPT
-                #self.speaker.speak(self.chat.generated_text(), speed)
+                # self.chat.raw(text) # from GPT
+                # self.speaker.speak(self.chat.generated_text(), speed)
         else:
             self.speaker.speak(text, speed)
 
@@ -40,6 +41,7 @@ class Chatbot:
     def change_listener_lang(self, lang='en'):
         self.listener.change_lang(lang)
         self.listener_lang = lang
+
 
 class Quiz(Chatbot):
     def __init__(self, num_words=10, level=1, pos=0):
@@ -68,53 +70,76 @@ class Quiz(Chatbot):
     def init_quiz(self):
         num = 0
         temp_li = []
-        score = []
+        score = {}
         Quiz.get_words(self)
-        for word in self.quiz_list.rows:
-            temp_li.append((word['chinese'], word['english']))
-        Quiz.change_listener_lang(self, 'cn')
+        for index, row in self.quiz_list.iterrows():
+            temp_li.append((row['chinese'], row['english']))
         while temp_li or not num:
-            li_len = len(temp_li)
             random.shuffle(temp_li)
             for el in temp_li:
-                Quiz.say(self, "Please provide the definition of" + el[1] + "in chinese")  # el[0] is in chinese
+                res = random.randint(0, 1)
+                if res:
+                    Quiz.change_listener_lang(self, 'en')
+                    Quiz.say(self, "Please provide the definition of" + el[1] + "in chinese")  # el[0] is in chinese
+                else:
+                    Quiz.change_listener_lang(self, 'cn')
+                    Quiz.say(self, "请告诉我英文怎么说 " + el[0])
+
                 # can' mix languages
                 user_input = Quiz.listen(self)
-                score[num] += 1, temp_li.remove(el) if user_input == el[1] else score
+                if res:
+                    if user_input == el[0]:
+                        score[num] += 1
+                        temp_li.remove(el)
+                else:
+                    if user_input == el[1]:
+                        score[num] += 1
+                        temp_li.remove(el)
             num += 1
         n = 1
         for s in score:
-            tts.speak("You got a score of {} in #{} test".format(s, n))
+            Quiz.say(self, "You got a score of {} in #{} test".format(s, n))
             if self.isActing:
                 gesture.correct() if s > .8 else gesture.incorrect()
             n += 1
-        Quiz.change_listener_lang(self, 'en')
+        Quiz.change_listener_lang(self, self.listener_lang)
 
-def get_quiz_info(chatbot):
-    chatbot.say("What is your hsk level?")
-    temp = chatbot.listen()
+
+def get_quiz_info(chatbot, limit):
+    error_msg = "Invalid input, please try again"
+    invalid = True
     level = 0
-    try:
-        if 1 <= int(temp) <= 6:
-            level = int(temp)
-        else:
-            chatbot.say("Invalid Input")
-    except ValueError:
-        chatbot.say("Invalid input")
-    chatbot.say("How many words would you like to learn a session?")
-    temp = chatbot.listen()
     num_words = 0
-    try:
-        num_words = int(temp)
-    except ValueError:
-        chatbot.say("Invalid Input")
-    chatbot.say("How many words did you leave off at last time?")
-    temp = chatbot.listen()
     pos = 0
-    try:
-        pos = int(temp)
-    except ValueError:
-        chatbot.say("Invalid Input")
+    while invalid:
+        chatbot.say("What is your hsk level?")
+        temp = chatbot.listen()
+        try:
+            if 1 <= int(temp) <= 6:
+                level = int(temp)
+                invalid = False
+            else:
+                chatbot.say(error_msg)
+        except ValueError:
+            chatbot.say(error_msg)
+    while invalid:
+        chatbot.say("How many words would you like to learn a session?")
+        temp = chatbot.listen()
+        try:
+            num_words = int(temp)
+            if num_words > limit:
+                chatbot.say(error_msg)
+            else:
+                invalid = False
+        except ValueError:
+            chatbot.say(error_msg)
+    while invalid:
+        chatbot.say("How many words did you leave off at last time?")
+        temp = chatbot.listen()
+        try:
+            pos = int(temp)
+        except ValueError:
+            chatbot.say(error_msg)
     return num_words, level, pos
 
 
