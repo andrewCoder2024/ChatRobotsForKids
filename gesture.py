@@ -114,7 +114,7 @@ def stop_robot():
     time.sleep(0.2)
                     
 if __name__=="__main__":
-    correct(3)
+    correct(2)
     stop_robot()
-    incorrect(3)
+    incorrect(2)
     stop_robot()

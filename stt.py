@@ -4,7 +4,14 @@
 from ctypes import *
 from contextlib import contextmanager
 import speech_recognition as sr
+import os
+import json
 
+os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
+
+with open("key.json") as f:
+    GOOGLE_CLOUD_SPEECH_CREDENTIALS = f.read()
+    
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
 
 def py_error_handler(filename, line, function, err, fmt):
@@ -67,8 +74,8 @@ class Listener:
             lang = "cmn-Hans-CN"
 
         try:
-            response["transcription"] = self.recognizer.recognize_google(audio, language = lang)
-        except sr.RequestError:
+            response["transcription"] = self.recognizer.recognize_google_cloud(audio, language=lang)
+        except sr.RequestError as e:
             # API was unreachable or unresponsive
             response["success"] = False
             response["error"] = "API unavailable"
