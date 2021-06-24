@@ -63,7 +63,7 @@ class Quiz(Chatbot):
         self.pos += self.num_words
 
     def iter_output(self):
-        for word in self.quiz_list.rows:
+        for word in self.quiz_list.iterrows():
             for el in word:
                 Quiz.say(self, el)
 
@@ -79,10 +79,10 @@ class Quiz(Chatbot):
             for el in temp_li:
                 res = random.randint(0, 1)
                 if res:
-                    Quiz.change_listener_lang(self, 'en')
+                    Quiz.change_speaker_lang(self, 'en')
                     Quiz.say(self, "Please provide the definition of" + el[1] + "in chinese")  # el[0] is in chinese
                 else:
-                    Quiz.change_listener_lang(self, 'cn')
+                    Quiz.change_speaker_lang(self, 'cn')
                     Quiz.say(self, "请告诉我英文怎么说 " + el[0])
 
                 # can' mix languages
@@ -102,6 +102,7 @@ class Quiz(Chatbot):
             if self.isActing:
                 gesture.correct() if s > .8 else gesture.incorrect()
             n += 1
+        Quiz.change_speaker_lang(self, self.speaker_lang)
         Quiz.change_listener_lang(self, self.listener_lang)
 
 
@@ -174,7 +175,7 @@ def main():
                     pi.say(text, generator=True)
                 elif "start" and "quiz" in text:
                     # bot asks in english, user replies in chinese
-                    attrs = list(get_quiz_info(pi))
+                    attrs = list(get_quiz_info(pi, 10000))
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
                     quizzer.init_quiz()
                     pi.say("Quiz completed")
