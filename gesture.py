@@ -12,6 +12,8 @@ LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
 LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL    = 0
+BUZ = 4
+
 
 # Create NeoPixel object with appropriate configuration.
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS,LED_CHANNEL)
@@ -32,6 +34,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(DR,GPIO.IN,GPIO.PUD_UP)
 GPIO.setup(DL,GPIO.IN,GPIO.PUD_UP)
+GPIO.setup(BUZ,GPIO.OUT)
 
 pwm = PCA9685(0x40)
 pwm.setPWMFreq(50)
@@ -78,13 +81,37 @@ def incorrect(duration=float('inf')):
         pwm.setServoPulse(1,0)
 
 def pass_quiz():
-    pass
-    #Ab.right()
-    #time.sleep(3)
-    #Ab.stop()
+    rgb = (255<<8) | (255<<16) | 0
+    freq = 2000
+    for i in range(0, strip.numPixels()):
+        strip.setPixelColor(i, rgb)
+        strip.show()
+    for i in range(2):
+        buzz(400, 0.3)
+        endTime = time.time() + 0.1
+        while time.time() < endTime:
+            Ab.forward()
+        buzz(622, 0.3)
+        endTime = time.time() + 0.1
+        while time.time() < endTime:
+            Ab.backward()
+    stop_robot()
     
 def fail_quiz():
-    pass
+    rgb = (0<<8) | (0<<16) | 255
+    for i in range(0, strip.numPixels()):
+        strip.setPixelColor(i, rgb)
+        strip.show()
+    for i in range(2):
+        buzz(400, 0.2)
+        endTime = time.time() + 0.5
+        while time.time() < endTime:
+            Ab.left()
+        buzz(330, 0.2)
+        endTime = time.time() + 0.5
+        while time.time() < endTime:
+            Ab.right()
+    stop_robot()
 
 def breathing_lights(rgb, speed):
     global x
@@ -112,9 +139,34 @@ def stop_robot():
     time.sleep(0.2)
     pwm.setServoPulse(1,0)
     time.sleep(0.2)
+    
+def beep_on():
+	GPIO.output(BUZ,GPIO.HIGH)
+def beep_off():
+	GPIO.output(BUZ,GPIO.LOW)
+
+def buzz(noteFreq, duration):
+    halveWaveTime = 1 / (noteFreq * 2 )
+    waves = int(duration * noteFreq)
+    for i in range(waves):
+       GPIO.output(BUZ, True)
+       time.sleep(halveWaveTime)
+       GPIO.output(BUZ, False)
+       time.sleep(halveWaveTime)
+                    
                     
 if __name__=="__main__":
-    correct(2)
-    stop_robot()
-    incorrect(2)
-    stop_robot()
+    #correct(2)
+    #stop_robot()
+    #incorrect(2)
+    #stop_robot()
+    #buzz(1046, 1)
+    pass_quiz()
+    #buzz(330, 0.3)
+    #buzz(400, 0.3)
+    #buzz(330, 0.3)
+    #buzz(400, 0.3)
+    #beep_off()
+    #buzz(261, 1)
+    fail_quiz()
+    #beep_off()
