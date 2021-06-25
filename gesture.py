@@ -156,12 +156,12 @@ def buzz(noteFreq, duration):
                     
                     
 if __name__=="__main__":
-    #correct(2)
-    #stop_robot()
-    #incorrect(2)
-    #stop_robot()
+    correct(5)
+    stop_robot()
+    incorrect(5)
+    stop_robot()
     #buzz(1046, 1)
-    pass_quiz()
+    #pass_quiz()
     #buzz(330, 0.3)
     #buzz(400, 0.3)
     #buzz(330, 0.3)
