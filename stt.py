@@ -8,9 +8,6 @@ import os
 import json
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
-
-with open("key.json") as f:
-    GOOGLE_CLOUD_SPEECH_CREDENTIALS = f.read()
     
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
 
@@ -30,7 +27,7 @@ class Listener:
     def __init__(self, lang = 'en') -> None:
         self.recognizer = sr.Recognizer()
         with noalsaerr():
-            self.microphone = sr.Microphone(device_index=0)
+            self.microphone = sr.Microphone(device_index=0, sample_rate=48000)
         self.lang = lang
 
     def listens(self):
@@ -55,7 +52,7 @@ class Listener:
         # adjust the recognizer sensitivity to ambient noise and record audio
         # from the microphone
         with self.microphone as source:
-            self.recognizer.adjust_for_ambient_noise(source)
+            #self.recognizer.adjust_for_ambient_noise(source)
             audio = self.recognizer.listen(source)
             
         # set up the response object

@@ -10,8 +10,10 @@ def chinese_chatbot(text):
     answer = sess.text
 
     answer = json.loads(answer)
-
-    return answer["data"]["info"]['text']
+    answer = answer["data"]["info"]['text']
+    answer = answer.replace('~', '')
+    answer = answer.replace('小思', '我')
+    return answer
 
 if __name__ == '__main__':
     text = input("User: ")
