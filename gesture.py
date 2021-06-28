@@ -3,6 +3,7 @@ from rpi_ws281x import Adafruit_NeoPixel, Color
 import RPi.GPIO as GPIO
 from AlphaBot2 import AlphaBot2
 from PCA9685 import PCA9685
+import random
 
 # LED strip configuration:
 LED_COUNT      = 4      # Number of LED pixels.
@@ -134,6 +135,16 @@ def stop_robot():
     pwm.setServoPulse(0,1500)
     time.sleep(0.2)
     pwm.setServoPulse(1,1500)
+    time.sleep(0.2)
+    pwm.setServoPulse(0,0)
+    time.sleep(0.2)
+    pwm.setServoPulse(1,0)
+    time.sleep(0.2)
+
+def random_movement():
+    pwm.setServoPulse(0,random.randint(1250, 1750))
+    time.sleep(0.2)
+    pwm.setServoPulse(1,random.randint(1250, 1750))
     time.sleep(0.2)
     pwm.setServoPulse(0,0)
     time.sleep(0.2)

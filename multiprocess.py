@@ -4,7 +4,7 @@
 from multiprocessing import Process, Pipe
 import psutil
 from time import sleep
-from chatbot import main
+from chatbot_m import main
 from cam.pan_tilt_tracking import run
 
 #https://stackoverflow.com/questions/43861164/passing-data-between-separately-running-python-scripts
@@ -13,8 +13,8 @@ if __name__ == "__main__":
     try:
         # Create and start the child process
         parent_conn, child_conn = Pipe()
-        p = Process(target=run, args=(child_conn,))
-        p2 = Process(target=main, args=())
+        p = Process(target=run, args=())
+        p2 = Process(target=main, args=(child_conn,))
         p.start()
         p2.start()
         pid = p.pid  # Get the pid of the child process

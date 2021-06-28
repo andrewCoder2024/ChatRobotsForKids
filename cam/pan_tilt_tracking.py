@@ -1,9 +1,9 @@
 from multiprocessing import Manager
 from multiprocessing import Process
 from imutils.video import VideoStream
-from utils.objcenter import ObjCenter
-from utils.pid import PID
-from utils.PCA9685 import PCA9685
+from cam.utils.objcenter import ObjCenter
+from cam.utils.pid import PID
+from cam.utils.PCA9685 import PCA9685
 import argparse
 import signal
 import sys
@@ -12,6 +12,7 @@ import time
 
 # define the range for the motors
 servoRange = (-90, 90)
+pwm = None
 
 # function to handle keyboard interrupt
 def signal_handler(sig, frame):
@@ -97,6 +98,7 @@ def set_servos(pan, tlt):
 			pwm.setServoPulse(1,convert(tiltAngle))
 
 def run():
+	global pwm
 	# construct the argument parser and parse the arguments
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-c", "--cascade", type=str, required=True,

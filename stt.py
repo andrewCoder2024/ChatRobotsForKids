@@ -27,7 +27,7 @@ class Listener:
     def __init__(self, lang = 'en') -> None:
         self.recognizer = sr.Recognizer()
         with noalsaerr():
-            self.microphone = sr.Microphone(device_index=0, sample_rate=48000)
+            self.microphone = sr.Microphone(device_index=0, sample_rate=44100)
         self.lang = lang
 
     def listens(self):

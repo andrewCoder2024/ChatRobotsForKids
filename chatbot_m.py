@@ -3,12 +3,13 @@
 
 import random
 import pandas as pd
-import stt, tts
+import stt
+import tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 import gesture
-#from multiprocessing import Process,Pipe
-import time
+from multiprocessing import Process,Pipe
+
 
 class Chatbot:
     def __init__(self, isActing=True, sLang='en', lLang='en'):
@@ -67,7 +68,7 @@ class Quiz(Chatbot):
             for el in word:
                 Quiz.say(self, el)
 
-    def init_quiz(self):
+    def init_quiz(self, child_conn):
         num = 0
         temp_li = []
         score = {}
@@ -85,30 +86,38 @@ class Quiz(Chatbot):
                     Quiz.change_speaker_lang(self, 'cn')
                     Quiz.say(self, "请告诉我英文怎么说 " + el[0])
                 user_input = Quiz.listen(self)
+                child_conn.send('stop')
+                time.sleep(0.2)
                 if res:
                     if user_input == el[0]:
                         score[num] += 1
                         temp_li.remove(el)
                         gesture.correct(2)
-                        gesture.stop_robot()
+                        stop_robot()
                     else:
                         gesture.incorrect(2)
-                        gesture.stop_robot()
+                        stop_robot()
                 else:
                     if user_input == el[1]:
                         score[num] += 1
                         temp_li.remove(el)
                         gesture.correct(2)
-                        gesture.stop_robot()
+                        stop_robot()
                     else:
                         gesture.incorrect(2)
-                        gesture.stop_robot()
+                        stop_robot()
+                child_conn.send("cont")
+                time.sleep(0.2)
             num += 1
         n = 1
         for s in score:
             Quiz.say(self, "You got a score of {} in #{} test".format(s, n))
             if self.isActing:
+                child_conn.send('stop')
+                time.sleep(0.2)
                 gesture.pass_quiz() if s > .8 else gesture.fail_quiz()
+                child_conn.send('cont')
+                time.sleep(0.2)
             n += 1
         Quiz.change_speaker_lang(self, self.speaker_lang)
         Quiz.change_listener_lang(self, self.listener_lang)
@@ -156,26 +165,30 @@ def get_quiz_info(chatbot, limit):
     return num_words, level, pos
 
 
-def main():
+def main(child_conn):
     pi = Chatbot()
-    gesture.random_movement()
-    pi.say("Hello, welcome back!", 1.1)
+    pi.say("Hello, welcome back!", 1)
+    time.sleep(10)
+    child_conn.send('stop')
+    time.sleep(0.2)
+    gesture.correct()
+    child_conn.send('cont')
+    time.sleep(0.2)
     try:
         while True:
             text = pi.listen()
             print(text)
             text = text.lower()
-            gesture.random_movement()
             if pi.speaker_lang == 'cn':
                 if "换成" and "英文" in text:
                     pi.say("开始说英文啦")
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
-                    pi.say("hello", generator=True)
+                    pi.say(text, generator=True)
                 elif "开始" and "测验" in text:
                     attrs = list(get_quiz_info(pi, 10000))
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
-                    quizzer.init_quiz()
+                    quizzer.init_quiz(child_conn)
                     pi.say("测验结束")
                 elif "再见" in text:
                     pi.say("下次见")
@@ -187,26 +200,30 @@ def main():
                     pi.say("let's talk in chinese")
                     pi.change_speaker_lang('cn')
                     pi.change_listener_lang('cn')
-                    pi.say("你好", generator=True)
+                    pi.say(text, generator=True)
                 elif "start" and "quiz" in text:
                     # bot asks in english, user replies in chinese
                     attrs = list(get_quiz_info(pi, 10000))
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
-                    quizzer.init_quiz()
+                    quizzer.init_quiz(child_conn)
                     pi.say("Quiz completed")
                 elif "bye" in text:
                     pi.say("see you")
                     exit()
-                elif "say yes" in text:
-                    gesture.correct(3)
-                    gesture.stop_robot()
-                elif "say no" in text:
-                    gesture.incorrect(3)
-                    gesture.stop_robot()
+                elif text == "say yes":
+                    child_conn.send('stop')
+                    time.sleep(0.2)
+                    gesture.correct()
+                    child_conn.send('cont')
+                    time.sleep(0.2)
+                elif text == "say no":
+                    child_conn.send('stop')
+                    time.sleep(0.2)
+                    gesture.incorrect()
+                    child_conn.send('cont')
+                    time.sleep(0.2)
                 else:
                     pi.say(text, generator=True)
-                gesture.random_movement()
-                time.sleep(0.2)
     except KeyboardInterrupt:
         pass
 
