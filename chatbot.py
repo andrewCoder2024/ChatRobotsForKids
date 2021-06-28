@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import random
+from audio import media_translation
 import pandas as pd
 import stt, tts
 # from DiabloGPT import Chat
@@ -190,6 +191,10 @@ def main():
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
                     quizzer.init_quiz()
                     pi.say("测验结束")
+                elif "翻译" in text:
+                    pi.say("请说一句话，我要把它翻译成英文！")
+                    to_translate = pi.listen()
+                    pi.say(media_translation.translate_text('cn','en-US',to_translate))
                 elif "再见" in text:
                     pi.say("下次见")
                     exit()
@@ -207,6 +212,10 @@ def main():
                     quizzer = Quiz(attrs[0], attrs[1], attrs[2])
                     quizzer.init_quiz()
                     pi.say("Quiz completed")
+                elif "translate" in text:
+                    pi.say("Please say a word, I'll translate it into Chinese")
+                    to_translate = pi.listen()
+                    pi.say(media_translation.translate_text('en-US','cn',to_translate))
                 elif "bye" in text:
                     pi.say("see you")
                     exit()
