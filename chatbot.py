@@ -8,6 +8,7 @@ import tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 import gesture
+from multiprocessing import Process,Pipe
 
 
 class Chatbot:
@@ -87,6 +88,8 @@ class Quiz(Chatbot):
 
                 # can' mix languages
                 user_input = Quiz.listen(self)
+                child_conn.send('stop')
+                time.sleep(0.2)
                 if res:
                     if user_input == el[0]:
                         score[num] += 1
@@ -105,12 +108,18 @@ class Quiz(Chatbot):
                     else:
                         gesture.incorrect(2)
                         stop_robot()
+                child_conn.send("cont")
+                time.sleep(0.2)
             num += 1
         n = 1
         for s in score:
             Quiz.say(self, "You got a score of {} in #{} test".format(s, n))
             if self.isActing:
+                child_conn.send('stop')
+                time.sleep(0.2)
                 gesture.pass_quiz() if s > .8 else gesture.fail_quiz()
+                child_conn.send('cont')
+                time.sleep(0.2)
             n += 1
         Quiz.change_speaker_lang(self, self.speaker_lang)
         Quiz.change_listener_lang(self, self.listener_lang)
@@ -158,7 +167,7 @@ def get_quiz_info(chatbot, limit):
     return num_words, level, pos
 
 
-def main():
+def main(child_conn):
     pi = Chatbot()
     pi.say("Hello, welcome back!", 1)
     try:
@@ -197,9 +206,17 @@ def main():
                     pi.say("see you")
                     exit()
                 elif text == "say yes":
+                    child_conn.send('stop')
+                    time.sleep(0.2)
                     gesture.correct()
+                    child_conn.send('cont')
+                    time.sleep(0.2)
                 elif text == "say no":
+                    child_conn.send('stop')
+                    time.sleep(0.2)
                     gesture.incorrect()
+                    child_conn.send('cont')
+                    time.sleep(0.2)
                 else:
                     pi.say(text, generator=True)
     except KeyboardInterrupt:

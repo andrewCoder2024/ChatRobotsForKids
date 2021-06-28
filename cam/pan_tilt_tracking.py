@@ -96,7 +96,7 @@ def set_servos(pan, tlt):
 		if in_range(tiltAngle, servoRange[0], servoRange[1]):
 			pwm.setServoPulse(1,convert(tiltAngle))
 
-if __name__ == "__main__":
+def run():
 	# construct the argument parser and parse the arguments
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-c", "--cascade", type=str, required=True,
