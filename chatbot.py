@@ -9,6 +9,8 @@ from chinese_convo import chinese_chatbot
 import gesture
 #from multiprocessing import Process,Pipe
 import time
+from chatterbot import ChatBot
+from chatterbot.trainers import ChatterBotCorpusTrainer
 
 class Chatbot:
     def __init__(self, isActing=True, sLang='en', lLang='en'):
@@ -18,14 +20,25 @@ class Chatbot:
         self.isActing = isActing
         self.speaker_lang = sLang
         self.listener_lang = lLang
+        self.chat = ChatBot('Raspberry Pi')
+        self.trainer = ChatterBotCorpusTrainer(self.chat)
+        self.train()
+
+    def train(self):
+        # Train the chatbot based on the english corpus
+        self.trainer.train("chatterbot.corpus.english")
+        # Train based on english greetings corpus
+        self.trainer.train("chatterbot.corpus.english.greetings")
+        # Train based on the english conversations corpus
+        self.trainer.train("chatterbot.corpus.english.conversations")
 
     def say(self, text, speed=1, generator=False):
         if generator:
             if self.speaker_lang == 'cn':
                 self.speaker.speak(chinese_chatbot(text), speed)
             else:
-                pass
-                self.speaker.speak(text, speed)
+                self.speaker.speak(self.chat.get_response(text), speed)
+                # self.speaker.speak(text, speed)
                 # self.chat.raw(text) # from GPT
                 # self.speaker.speak(self.chat.generated_text(), speed)
         else:
