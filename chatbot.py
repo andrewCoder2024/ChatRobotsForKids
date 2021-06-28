@@ -99,6 +99,16 @@ class Quiz(Chatbot):
                     Quiz.change_speaker_lang(self, 'cn')
                     Quiz.say(self, "请告诉我英文怎么说 " + el[0])
                 user_input = Quiz.listen(self)
+                no_response_msg = "I didn't catch that. Say again?"
+                no_response_msg_cn = "没听清，可以再说一遍吗？"
+                no_response = True if user_input == "I didn't catch that. Say again?" else False
+                while no_response:
+                    if self.speaker_lang == 'en':
+                        Quiz.say(self, no_response_msg)
+                    else:
+                        Quiz.say(self, no_response_msg_cn)
+                    user_input = Quiz.listen(self)
+                    no_response = True if user_input == "I didn't catch that. Say again?" else False
                 if res:
                     if user_input == el[0]:
                         score[num] += 1
