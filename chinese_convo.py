@@ -11,7 +11,7 @@ def chinese_chatbot(text):
 
     answer = json.loads(answer)
     answer = answer["data"]["info"]['text']
-    answer = answer.replace('~', '')
+    answer = answer.replace('～', '')
     answer = answer.replace('小思', '我')
     return answer
 

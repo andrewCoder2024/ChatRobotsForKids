@@ -1,28 +1,28 @@
-from google.cloud import translate
+import six
+from google.cloud import translate_v2 as translate
+import os 
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
 
-def translate_text(source, target, text="hello", project_id="ttsproject-1622791296381"):
-    """Translating Text."""
+def translate_text(target, text="hello"):
+    """Translates text into the target language.
 
-    client = translate.TranslationServiceClient()
+    Target must be an ISO 639-1 language code.
+    See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+    """
 
-    location = "global"
+    translate_client = translate.Client()
 
-    parent = f"projects/{project_id}/locations/{location}"
+    if isinstance(text, six.binary_type):
+        text = text.decode("utf-8")
 
-    # Detail on supported types can be found here:
-    # https://cloud.google.com/translate/docs/supported-formats
-    response = client.translate_text(
-        request={
-            "parent": parent,
-            "contents": [text],
-            "mime_type": "text/plain",  # mime types: text/plain, text/html
-            "source_language_code": source,
-            "target_language_code": target,
-        }
-    )
+    # Text can also be a sequence of strings, in which case this method
+    # will return a sequence of results for each text.
+    result = translate_client.translate(text, target_language=target)
 
-    # Display the translation for each input text provided
-    return "".join([translation.translated_text for translation in response.translations])
-
-
+    return result["translatedText"]
+    
+    
+if __name__ == "__main__":
+    print(translate_text("en", "你好，今天天气怎么样"))
+    print(translate_text("zh-CN", "hello"))

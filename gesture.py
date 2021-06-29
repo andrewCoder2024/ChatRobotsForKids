@@ -140,6 +140,7 @@ def stop_robot():
     time.sleep(0.2)
     pwm.setServoPulse(1,0)
     time.sleep(0.2)
+    Ab.stop()
 
 def random_movement():
     pwm.setServoPulse(0,random.randint(1250, 1750))
