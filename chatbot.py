@@ -8,23 +8,23 @@ import stt, tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
 import time
-from chatterbot import ChatBot
-from chatterbot.trainers import ChatterBotCorpusTrainer
+#from chatterbot import ChatBot
+#from chatterbot.trainers import ChatterBotCorpusTrainer
 
 
 class Chatbot:
-    def __init__(self, isActing=True, sLang='en', lLang='en'):
+    def __init__(self, isActing=False, sLang='en', lLang='en'):
         self.isActing = isActing
         if self.isActing:
             import gesture
-        self.listener = stt.Listener()
-        self.speaker = tts.Speaker()
+        self.listener = stt.Listener(isActing)
+        self.speaker = tts.Speaker(isActing)
         # self.chat = Chat()
         self.speaker_lang = sLang
         self.listener_lang = lLang
-        self.chat = ChatBot('Raspberry Pi')
-        self.trainer = ChatterBotCorpusTrainer(self.chat)
-        self.training()
+        #self.chat = ChatBot('Raspberry Pi')
+       # self.trainer = ChatterBotCorpusTrainer(self.chat)
+        #self.training()
 
     def training(self):
         # Train the chatbot based on the english corpus
@@ -39,18 +39,19 @@ class Chatbot:
         if generator:
             if self.speaker_lang == 'cn':
                 response = chinese_chatbot(text)
-                print("response:",response)
+                print("response:", response)
                 self.speaker.speak(response, speed)
             else:
-                response = str(self.chat.get_response(text))
-                print("response:",response)
-                self.speaker.speak(response, speed)
-                # self.speaker.speak(text, speed)
+                #response = str(self.chat.get_response(text))
+                #print("response:",response)
+                #self.speaker.speak(response, speed)
+                 self.speaker.speak(text, speed)
                 # self.chat.raw(text) # from GPT
                 # self.speaker.speak(self.chat.generated_text(), speed)
         else:
+            print("response:", text)
             self.speaker.speak(text, speed)
-                print("response:",text)
+
     def listen(self):
         response = self.listener.listens()
         print("You:", response)
@@ -103,7 +104,7 @@ class Quiz():
                 res = random.randint(0, 1)
                 if res:
                     self.chatbot.change_speaker_lang('en')
-                    self.chatbot.say("Please provide the definition of" + el[1] + "in chinese")  # el[0] is in chinese
+                    self.chatbot.say("Please provide the definition of " + el[1] + " in chinese")  # el[0] is in chinese
                     self.chatbot.change_listener_lang('cn')
                 else:
                     self.chatbot.change_speaker_lang('cn')
@@ -129,7 +130,8 @@ class Quiz():
                         if self.chatbot.isActing:
                             gesture.correct(2)
                             gesture.stop_robot()
-                        else:
+                    else:
+                        if self.chatbot.isActing:
                             gesture.incorrect(2)
                             gesture.stop_robot()
                 else:
@@ -140,8 +142,9 @@ class Quiz():
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            gesture.incorrect(2)
-                            gesture.stop_robot()
+                            if self.chatbot.isActing:
+                                gesture.incorrect(2)
+                                gesture.stop_robot()
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')

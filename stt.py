@@ -6,8 +6,8 @@ from contextlib import contextmanager
 import os
 import json
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
-#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
 
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
 
@@ -160,7 +160,12 @@ def listen_print_loop(responses):
             #num_chars_printed = 0
 
 class Listener():
-    def __init__(self, lang = 'en') -> None:
+    def __init__(self, isActing = False, lang = 'en') -> None:
+        if isActing:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/pi/ChatRobotsForKids/key.json"
+        else:
+            os.environ[
+                "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
         self.lang = lang
         self.client = speech.SpeechClient()
         self.config = speech.RecognitionConfig(
@@ -171,10 +176,24 @@ class Listener():
         self.streaming_config = speech.StreamingRecognitionConfig(
             config=self.config, interim_results=True
             )
+        self.isActing = isActing
     
     def listens(self):
         try:
-            with noalsaerr():
+            if self.isActing:
+                with noalsaerr():
+                    with MicrophoneStream(RATE, CHUNK) as stream:
+                        audio_generator = stream.generator()
+                        requests = (
+                            speech.StreamingRecognizeRequest(audio_content=content)
+                            for content in audio_generator
+                        )
+
+                        responses = self.client.streaming_recognize(self.streaming_config, requests)
+
+                        # Now, put the transcription responses to use.
+                        return listen_print_loop(responses)
+            else:
                 with MicrophoneStream(RATE, CHUNK) as stream:
                     audio_generator = stream.generator()
                     requests = (
@@ -183,9 +202,10 @@ class Listener():
                     )
 
                     responses = self.client.streaming_recognize(self.streaming_config, requests)
-            
+
                     # Now, put the transcription responses to use.
                     return listen_print_loop(responses)
+
         except KeyboardInterrupt:
             pass    
     
