@@ -269,9 +269,9 @@ def main():
                         gesture.stop_robot()
                 else:
                     pi.say(text, generator=True)
-            if pi.isActing:
-                gesture.random_movement()
-            time.sleep(0.2)
+            # if pi.isActing:
+            #     gesture.random_movement()
+            # time.sleep(0.2)
     except KeyboardInterrupt:
         pass
 
