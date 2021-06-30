@@ -35,6 +35,7 @@ class Chatbot:
         self.trainer.train("chatterbot.corpus.english.conversations")
 
     def say(self, text, speed=1, generator=False):
+        print("You:", text)
         if generator:
             if self.speaker_lang == 'cn':
                 self.speaker.speak(chinese_chatbot(text), speed)
@@ -47,7 +48,9 @@ class Chatbot:
             self.speaker.speak(text, speed)
 
     def listen(self):
-        return self.listener.listens()
+        response = self.listener.listens()
+        print("You:", response)
+        return response
 
     def change_speaker_lang(self, lang='en'):
         self.speaker.change_lang(lang)
@@ -104,7 +107,6 @@ class Quiz():
                     self.chatbot.change_listener_lang('en')
                 user_input = self.chatbot.listen()
                 user_input = user_input.lower()
-                print(user_input)
                 no_response_msg = "I didn't catch that. Say again?"
                 no_response_msg_cn = "没听清，可以再说一遍吗？"
                 no_response = True if user_input == "i didn't catch that. say again?" else False
@@ -115,7 +117,6 @@ class Quiz():
                         self.chatbot.say(no_response_msg_cn)
                     user_input = self.chatbot.listen()
                     user_input = user_input.lower()
-                    print(user_input)
                     no_response = True if user_input == "i didn't catch that. say again?" else False
                 if res:
                     if el[0] in user_input:
@@ -156,7 +157,6 @@ def get_quiz_info(chatbot, limit):
     while invalid:
         chatbot.say("Please answer in English. What is your hsk level?")
         temp = chatbot.listen()
-        print(temp)
         try:
             if 1 <= int(temp) <= 6:
                 level = int(temp)
@@ -168,7 +168,6 @@ def get_quiz_info(chatbot, limit):
     while invalid2:
         chatbot.say("How many words would you like to learn a session?")
         temp = chatbot.listen()
-        print(temp)
         try:
             num_words = int(temp)
             if num_words > limit:
@@ -180,7 +179,6 @@ def get_quiz_info(chatbot, limit):
     while invalid3:
         chatbot.say("How many words did you leave off at last time?")
         temp = chatbot.listen()
-        print(temp)
         try:
             pos = int(temp)
             invalid3 = False
@@ -196,7 +194,6 @@ def main():
     try:
         while True:
             text = pi.listen()
-            print(text)
             text = text.lower()
             gesture.random_movement()
             if pi.speaker_lang == 'cn':
@@ -205,8 +202,6 @@ def main():
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
                     pi.say("hello", generator=True)
-                elif text == "i didn't catch that. say again?":
-                    pi.say("我沒有听清楚，再说一遍？", generator=False)
                 elif "开始" and "测验" in text:
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
@@ -217,15 +212,9 @@ def main():
                     pi.change_listener_lang('cn')
                     pi.say("测验结束")
                 elif "翻译" in text:
-                    invalid = True
-                    while invalid:
-                        pi.say("请说一句话，我把它翻译成英文！")
-                        to_translate = pi.listen()
-                        to_translate = to_translate.lower()
-                        if "i didn't catch that. say again?" not in to_translate:
-                            invalid = False
-                        if invalid:
-                            pi.say("请再说一次")
+                    pi.say("请说一句话，我把它翻译成英文！")
+                    to_translate = pi.listen()
+                    to_translate = to_translate.lower()
                     pi.change_speaker_lang('en')
                     pi.say(media_translation.translate_text('en', to_translate))
                     pi.change_speaker_lang('cn')
@@ -240,8 +229,6 @@ def main():
                     pi.change_speaker_lang('cn')
                     pi.change_listener_lang('cn')
                     pi.say("你好", generator=True)
-                elif text == "i didn't catch that. say again?":
-                    pi.say(text, generator=False)
                 elif "start" and "quiz" in text:
                     # bot asks in english, user replies in chinese
                     attrs = list(get_quiz_info(pi, 10000))
@@ -251,15 +238,9 @@ def main():
                     pi.change_listener_lang('en')
                     pi.say("Quiz completed")
                 elif "translate" in text:
-                    invalid = True
                     pi.say("Please say a phrase, I'll translate it into Chinese")
-                    while invalid:
-                        to_translate = pi.listen()
-                        to_translate = to_translate.lower()
-                        if "i didn't catch that. say again?" not in to_translate:
-                            invalid = False
-                        if invalid:
-                            pi.say("Can you repeat that?")
+                    to_translate = pi.listen()
+                    to_translate = to_translate.lower()
                     pi.change_speaker_lang('cn')
                     pi.say(media_translation.translate_text('zh-CN', to_translate))
                     pi.change_speaker_lang('en')
