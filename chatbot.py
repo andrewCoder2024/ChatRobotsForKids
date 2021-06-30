@@ -193,13 +193,15 @@ def get_quiz_info(chatbot, limit):
 
 def main():
     pi = Chatbot()
-    gesture.random_movement()
+    if pi.isActing:
+        gesture.random_movement()
     pi.say("Hello, welcome back!", 1.1)
     try:
         while True:
             text = pi.listen()
             text = text.lower()
-            gesture.random_movement()
+            if pi.isActing:
+                gesture.random_movement()
             if pi.speaker_lang == 'cn':
                 if "换成" and "英文" in text:
                     pi.say("开始说英文啦")
@@ -261,7 +263,8 @@ def main():
                         gesture.stop_robot()
                 else:
                     pi.say(text, generator=True)
-                gesture.random_movement()
+                if pi.isActing:
+                    gesture.random_movement()
                 time.sleep(0.2)
     except KeyboardInterrupt:
         pass
