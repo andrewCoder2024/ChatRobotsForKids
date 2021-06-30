@@ -7,23 +7,24 @@ import pandas as pd
 import stt, tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
-import gesture
 import time
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
 
+
 class Chatbot:
     def __init__(self, isActing=True, sLang='en', lLang='en'):
+        self.isActing = isActing
+        if self.isActing:
+            import gesture
         self.listener = stt.Listener()
         self.speaker = tts.Speaker()
         # self.chat = Chat()
-        self.isActing = isActing
         self.speaker_lang = sLang
         self.listener_lang = lLang
         self.chat = ChatBot('Raspberry Pi')
         self.trainer = ChatterBotCorpusTrainer(self.chat)
-        self.trainer.train("chatterbot.corpus.english.greetings")
-        self.trainer.train("chatterbot.corpus.english.conversations")
+        self.training()
 
     def training(self):
         # Train the chatbot based on the english corpus
@@ -39,7 +40,7 @@ class Chatbot:
                 self.speaker.speak(chinese_chatbot(text), speed)
             else:
                 self.speaker.speak(str(self.chat.get_response(text)), speed)
-                #self.speaker.speak(text, speed)
+                # self.speaker.speak(text, speed)
                 # self.chat.raw(text) # from GPT
                 # self.speaker.speak(self.chat.generated_text(), speed)
         else:
@@ -73,7 +74,7 @@ class Quiz():
             self.quiz_list = self.word_list
         else:
             self.quiz_list = pd.concat(self.quiz_list, self.word_list)
-        #print(self.word_list.head())
+        # print(self.word_list.head())
         self.pos += self.num_words
 
     def iter_output(self):
@@ -120,20 +121,22 @@ class Quiz():
                     if el[0] in user_input:
                         score[num] += 1
                         temp_li.remove(el)
-                        gesture.correct(2)
-                        gesture.stop_robot()
-                    else:
-                        gesture.incorrect(2)
-                        gesture.stop_robot()
+                        if self.chatbot.isActing:
+                            gesture.correct(2)
+                            gesture.stop_robot()
+                        else:
+                            gesture.incorrect(2)
+                            gesture.stop_robot()
                 else:
                     if el[1] in user_input:
                         score[num] += 1
                         temp_li.remove(el)
-                        gesture.correct(2)
-                        gesture.stop_robot()
-                    else:
-                        gesture.incorrect(2)
-                        gesture.stop_robot()
+                        if self.chatbot.isActing:
+                            gesture.correct(2)
+                            gesture.stop_robot()
+                        else:
+                            gesture.incorrect(2)
+                            gesture.stop_robot()
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')
@@ -264,11 +267,13 @@ def main():
                     pi.say("see you")
                     exit()
                 elif "say yes" in text:
-                    gesture.correct(3)
-                    gesture.stop_robot()
+                    if pi.isActing:
+                        gesture.correct(3)
+                        gesture.stop_robot()
                 elif "say no" in text:
-                    gesture.incorrect(3)
-                    gesture.stop_robot()
+                    if pi.isActing:
+                        gesture.incorrect(3)
+                        gesture.stop_robot()
                 else:
                     pi.say(text, generator=True)
                 gesture.random_movement()
