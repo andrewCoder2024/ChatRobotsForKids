@@ -100,18 +100,22 @@ class Quiz():
         while temp_li or not num:
             random.shuffle(temp_li)
             score[num] = 0
+            user_input = ""
+            repeat_keywords = ["repeat", "please say that again", "didn't catch that", "请重复一遍","重复","请再说一遍", ""]
             for el in temp_li:
                 res = random.randint(0, 1)
                 if res:
-                    self.chatbot.change_speaker_lang('en')
-                    self.chatbot.say("Please provide the definition of " + el[1] + " in chinese")  # el[0] is in chinese
-                    self.chatbot.change_listener_lang('cn')
+                    while user_input in repeat_keywords:
+                        self.chatbot.change_speaker_lang('en')
+                        self.chatbot.say("Please provide the definition of " + el[1] + " in chinese")  # el[0] is in chinese
+                        self.chatbot.change_listener_lang('cn')
+                        user_input = self.chatbot.listen()
                 else:
-                    self.chatbot.change_speaker_lang('cn')
-                    self.chatbot.say("请用英文说 " + el[0])
-                    self.chatbot.change_listener_lang('en')
-                user_input = self.chatbot.listen()
-                user_input = user_input.lower()
+                    while user_input in repeat_keywords:
+                        self.chatbot.change_speaker_lang('cn')
+                        self.chatbot.say("请用英文说 " + el[0])
+                        self.chatbot.change_listener_lang('en')
+                        user_input = self.chatbot.listen()
                 no_response_msg = "I didn't catch that. Say again?"
                 no_response_msg_cn = "没听清，可以再说一遍吗？"
                 no_response = True if user_input == "i didn't catch that. say again?" else False
@@ -130,10 +134,16 @@ class Quiz():
                         if self.chatbot.isActing:
                             gesture.correct(2)
                             gesture.stop_robot()
+                        else:
+                            self.chatbot.change_speaker_lang('en')
+                            self.chatbot.say("Good Job!", 1.2)
                     else:
                         if self.chatbot.isActing:
                             gesture.incorrect(2)
                             gesture.stop_robot()
+                        else:
+                            self.chatbot.change_speaker_lang('en')
+                            self.chatbot.say("Try again next time...", 0.8)
                 else:
                     if el[1] in user_input:
                         score[num] += 1
@@ -142,9 +152,15 @@ class Quiz():
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            if self.chatbot.isActing:
-                                gesture.incorrect(2)
-                                gesture.stop_robot()
+                            self.chatbot.change_speaker_lang('cn')
+                            self.chatbot.say("恭喜，你答对了！", 0.8)
+                    else:
+                        if self.chatbot.isActing:
+                            gesture.incorrect(2)
+                            gesture.stop_robot()
+                        else:
+                            self.chatbot.change_speaker_lang('cn')
+                            self.chatbot.say("下次再努力", 0.8)
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')
