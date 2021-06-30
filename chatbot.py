@@ -100,9 +100,9 @@ class Quiz():
         while temp_li or not num:
             random.shuffle(temp_li)
             score[num] = 0
-            user_input = ""
-            repeat_keywords = ["repeat", "please say that again", "didn't catch that", "请重复一遍","重复","请再说一遍", ""]
+            repeat_keywords = ["repeat", "say that again", "didn't catch that", "can you repeat", "重复一遍", "重复", "再说一遍", ""]
             for el in temp_li:
+                user_input = ""
                 res = random.randint(0, 1)
                 if res:
                     while user_input in repeat_keywords:
@@ -110,24 +110,6 @@ class Quiz():
                         self.chatbot.say("Please provide the definition of " + el[1] + " in chinese")  # el[0] is in chinese
                         self.chatbot.change_listener_lang('cn')
                         user_input = self.chatbot.listen()
-                else:
-                    while user_input in repeat_keywords:
-                        self.chatbot.change_speaker_lang('cn')
-                        self.chatbot.say("请用英文说 " + el[0])
-                        self.chatbot.change_listener_lang('en')
-                        user_input = self.chatbot.listen()
-                no_response_msg = "I didn't catch that. Say again?"
-                no_response_msg_cn = "没听清，可以再说一遍吗？"
-                no_response = True if user_input == "i didn't catch that. say again?" else False
-                while no_response:
-                    if self.chatbot.speaker_lang == 'en':
-                        self.chatbot.say(no_response_msg)
-                    else:
-                        self.chatbot.say(no_response_msg_cn)
-                    user_input = self.chatbot.listen()
-                    user_input = user_input.lower()
-                    no_response = True if user_input == "i didn't catch that. say again?" else False
-                if res:
                     if el[0] in user_input:
                         score[num] += 1
                         temp_li.remove(el)
@@ -145,6 +127,11 @@ class Quiz():
                             self.chatbot.change_speaker_lang('en')
                             self.chatbot.say("Try again next time...", 0.8)
                 else:
+                    while user_input in repeat_keywords:
+                        self.chatbot.change_speaker_lang('cn')
+                        self.chatbot.say("请用英文说 " + el[0])
+                        self.chatbot.change_listener_lang('en')
+                        user_input = self.chatbot.listen()
                     if el[1] in user_input:
                         score[num] += 1
                         temp_li.remove(el)
@@ -211,7 +198,7 @@ def get_quiz_info(chatbot, limit):
 
 
 def main():
-    pi = Chatbot()
+    pi = Chatbot() # add isActing = True to make robot move
     if pi.isActing:
         gesture.random_movement()
     pi.say("Hello, welcome back!", 1.1)
@@ -282,9 +269,9 @@ def main():
                         gesture.stop_robot()
                 else:
                     pi.say(text, generator=True)
-                if pi.isActing:
-                    gesture.random_movement()
-                time.sleep(0.2)
+            if pi.isActing:
+                gesture.random_movement()
+            time.sleep(0.2)
     except KeyboardInterrupt:
         pass
 
