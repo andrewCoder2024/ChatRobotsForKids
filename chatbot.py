@@ -35,18 +35,22 @@ class Chatbot:
         self.trainer.train("chatterbot.corpus.english.conversations")
 
     def say(self, text, speed=1, generator=False):
-        print("You:", text)
+        response = ""
         if generator:
             if self.speaker_lang == 'cn':
-                self.speaker.speak(chinese_chatbot(text), speed)
+                response = chinese_chatbot(text)
+                print("response:",response)
+                self.speaker.speak(response, speed)
             else:
-                self.speaker.speak(str(self.chat.get_response(text)), speed)
+                response = str(self.chat.get_response(text))
+                print("response:",response)
+                self.speaker.speak(response, speed)
                 # self.speaker.speak(text, speed)
                 # self.chat.raw(text) # from GPT
                 # self.speaker.speak(self.chat.generated_text(), speed)
         else:
             self.speaker.speak(text, speed)
-
+                print("response:",text)
     def listen(self):
         response = self.listener.listens()
         print("You:", response)
