@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+from __future__ import division
 
 from ctypes import *
 from contextlib import contextmanager
-import speech_recognition as sr
+#import speech_recognition as sr
 import os
 import json
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
-    
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="
+
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
 
 def py_error_handler(filename, line, function, err, fmt):
@@ -23,92 +23,189 @@ def noalsaerr():
     yield
     asound.snd_lib_error_set_handler(None)
 
-class Listener:
-    def __init__(self, lang = 'en') -> None:
-        self.recognizer = sr.Recognizer()
-        with noalsaerr():
-            self.microphone = sr.Microphone(device_index=0, sample_rate=44100)
-        self.lang = lang
+import re
+import sys
 
-    def listens(self):
-        """Transcribe speech from recorded from `microphone`.
+from google.cloud import speech
 
-        Returns a dictionary with three keys:
-        "success": a boolean indicating whether or not the API request was
-                successful
-        "error":   `None` if no error occured, otherwise a string containing
-                an error message if the API could not be reached or
-                speech was unrecognizable
-        "transcription": `None` if speech could not be transcribed,
-                otherwise a string containing the transcribed text
-        """
-        # check that recognizer and microphone arguments are appropriate type
-        if not isinstance(self.recognizer, sr.Recognizer):
-            raise TypeError("`recognizer` must be `Recognizer` instance")
+import pyaudio
+from six.moves import queue
 
-        if not isinstance(self.microphone, sr.Microphone):
-            raise TypeError("`microphone` must be `Microphone` instance")
+# Audio recording parameters
+RATE = 16000
+CHUNK = int(RATE / 10)  # 100ms
 
-        # adjust the recognizer sensitivity to ambient noise and record audio
-        # from the microphone
-        with self.microphone as source:
-            #self.recognizer.adjust_for_ambient_noise(source)
-            audio = self.recognizer.listen(source)
+
+class MicrophoneStream(object):
+    """Opens a recording stream as a generator yielding the audio chunks."""
+
+    def __init__(self, rate, chunk):
+        self._rate = rate
+        self._chunk = chunk
+
+        # Create a thread-safe buffer of audio data
+        self._buff = queue.Queue()
+        self.closed = True
+
+    def __enter__(self):
+        self._audio_interface = pyaudio.PyAudio()
+        self._audio_stream = self._audio_interface.open(
+            format=pyaudio.paInt16,
+            # The API currently only supports 1-channel (mono) audio
+            # https://goo.gl/z757pE
+            channels=1,
+            rate=self._rate,
+            input=True,
+            frames_per_buffer=self._chunk,
+            # Run the audio stream asynchronously to fill the buffer object.
+            # This is necessary so that the input device's buffer doesn't
+            # overflow while the calling thread makes network requests, etc.
+            stream_callback=self._fill_buffer,
+        )
+
+        self.closed = False
+
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._audio_stream.stop_stream()
+        self._audio_stream.close()
+        self.closed = True
+        # Signal the generator to terminate so that the client's
+        # streaming_recognize method will not block the process termination.
+        self._buff.put(None)
+        self._audio_interface.terminate()
+
+    def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
+        """Continuously collect data from the audio stream, into the buffer."""
+        self._buff.put(in_data)
+        return None, pyaudio.paContinue
+
+    def generator(self):
+        while not self.closed:
+            # Use a blocking get() to ensure there's at least one chunk of
+            # data, and stop iteration if the chunk is None, indicating the
+            # end of the audio stream.
+            chunk = self._buff.get()
+            if chunk is None:
+                return
+            data = [chunk]
+
+            # Now consume whatever other data's still buffered.
+            while True:
+                try:
+                    chunk = self._buff.get(block=False)
+                    if chunk is None:
+                        return
+                    data.append(chunk)
+                except queue.Empty:
+                    break
+
+            yield b"".join(data)
+
+
+def listen_print_loop(responses):
+    """Iterates through server responses and prints them.
+
+    The responses passed is a generator that will block until a response
+    is provided by the server.
+
+    Each response may contain multiple results, and each result may contain
+    multiple alternatives; for details, see https://goo.gl/tjCPAU.  Here we
+    print only the transcription for the top alternative of the top result.
+
+    In this case, responses are provided for interim results as well. If the
+    response is an interim one, print a line feed at the end of it, to allow
+    the next result to overwrite it, until the response is a final one. For the
+    final one, print a newline to preserve the finalized transcription.
+    """
+    num_chars_printed = 0
+    for response in responses:
+        if not response.results:
+            continue
+
+        # The `results` list is consecutive. For streaming, we only care about
+        # the first result being considered, since once it's `is_final`, it
+        # moves on to considering the next utterance.
+        result = response.results[0]
+        if not result.alternatives:
+            continue
+
+        # Display the transcription of the top alternative.
+        transcript = result.alternatives[0].transcript
+
+        # Display interim results, but with a carriage return at the end of the
+        # line, so subsequent lines will overwrite them.
+        #
+        # If the previous result was longer than this one, we need to print
+        # some extra spaces to overwrite the previous result
+        overwrite_chars = " " * (num_chars_printed - len(transcript))
+
+        if not result.is_final:
+            sys.stdout.write(transcript + overwrite_chars + "\r")
+            sys.stdout.flush()
+
+            num_chars_printed = len(transcript)
+
+        else:
             
-        # set up the response object
-        response = {
-            "success": True,
-            "error": None,
-            "transcription": None
-        }
+            return transcript + overwrite_chars
 
-        # try recognizing the speech in the recording
-        # if a RequestError or UnknownValueError exception is caught,
-        #     update the response object accordingly
-        if self.lang == 'en':
-            lang = "en-US"
-        else:
-            lang = "cmn-Hans-CN"
+            # Exit recognition if any of the transcribed phrases could be
+            # one of our keywords.
+            #if re.search(r"\b(exit|quit)\b", transcript, re.I):
+            #    print("Exiting..")
+            #    break
 
+            #num_chars_printed = 0
+
+class Listener():
+    def __init__(self, lang = 'en') -> None:
+        self.lang = lang
+        self.client = speech.SpeechClient()
+        self.config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=RATE,
+            language_code="en-US",
+        )   
+        self.streaming_config = speech.StreamingRecognitionConfig(
+            config=self.config, interim_results=True
+            )
+    
+    def listens(self):
         try:
-            response["transcription"] = self.recognizer.recognize_google_cloud(audio, language=lang)
-        except sr.RequestError as e:
-            # API was unreachable or unresponsive
-            response["success"] = False
-            response["error"] = "API unavailable"
-        except sr.UnknownValueError:
-            # speech was unintelligible
-            response["error"] = "Unable to recognize speech"
+            with noalsaerr():
+                with MicrophoneStream(RATE, CHUNK) as stream:
+                    audio_generator = stream.generator()
+                    requests = (
+                        speech.StreamingRecognizeRequest(audio_content=content)
+                        for content in audio_generator
+                    )
 
-        if response["transcription"]:
-            return response["transcription"]
-        elif not response["success"]:
-            return response["error"]
-        elif response["error"]:
-            return "I didn't catch that. Say again?"
-        else:
-            return "I have encountered an error"
-
+                    responses = self.client.streaming_recognize(self.streaming_config, requests)
+            
+                    # Now, put the transcription responses to use.
+                    return listen_print_loop(responses)
+        except KeyboardInterrupt:
+            pass    
+    
     def change_lang(self, lang):
         self.lang = lang
+        if self.lang == 'en':
+            language_code = 'en-US'
+        else:
+            language_code = 'cmn-CN'
+        self.config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=RATE,
+            language_code=language_code,
+        )   
+        self.streaming_config = speech.StreamingRecognitionConfig(
+            config=self.config, interim_results=True
+        )
 
 if __name__ == "__main__":
-    #PROMPT_LIMIT = 10
-    
     pi = Listener()
     print(pi.listens())
     pi.change_lang('cn')
     print(pi.listens())
-
-    # for i in range(PROMPT_LIMIT):
-    #     response = listen(recognizer, microphone)
-    #     if response["transcription"]:
-    #         break
-    #     if not response["success"]:
-    #         break
-    #     print("I didn't catch that. Say again?")
-    
-    # if response["error"]:
-    #     print("ERROR: {}".format(response["error"]))
-    # else:
-    #     print(response["transcription"])
