@@ -164,8 +164,10 @@ class Listener():
         if isActing:
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/pi/ChatRobotsForKids/key.json"
         else:
+            #os.environ[
+            #    "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
             os.environ[
-                "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
+                "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/momoe/Documents/GitHub/ChatRobotsForKids/key.json"
         self.lang = lang
         self.client = speech.SpeechClient()
         self.config = speech.RecognitionConfig(

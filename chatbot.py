@@ -10,7 +10,7 @@ from chinese_convo import chinese_chatbot
 import time
 #from chatterbot import ChatBot
 #from chatterbot.trainers import ChatterBotCorpusTrainer
-
+from english_convo import Chat
 
 class Chatbot:
     def __init__(self, isActing=False, sLang='en', lLang='en'):
@@ -22,6 +22,8 @@ class Chatbot:
         # self.chat = Chat()
         self.speaker_lang = sLang
         self.listener_lang = lLang
+        self.chat = Chat(language='en')
+        self.last_phrase = None
         #self.chat = ChatBot('Raspberry Pi')
        # self.trainer = ChatterBotCorpusTrainer(self.chat)
         #self.training()
@@ -39,21 +41,27 @@ class Chatbot:
         if generator:
             if self.speaker_lang == 'cn':
                 response = chinese_chatbot(text)
-                print("response:", response)
-                self.speaker.speak(response, speed)
             else:
                 #response = str(self.chat.get_response(text))
                 #print("response:",response)
                 #self.speaker.speak(response, speed)
-                 self.speaker.speak(text, speed)
+                response = self.chat.converse(text)
+                #self.speaker.speak(text, speed)
                 # self.chat.raw(text) # from GPT
                 # self.speaker.speak(self.chat.generated_text(), speed)
+            print("response:", response)
+            self.speaker.speak(response)
+            self.last_phrase = response
         else:
             print("response:", text)
             self.speaker.speak(text, speed)
+            self.last_phrase = text
 
     def listen(self):
-        response = self.listener.listens()
+        try:
+            response = self.listener.listens()
+        except:
+            response = "i didn't quite hear you, can you repeat it?"
         print("You:", response)
         return response
 
@@ -209,12 +217,12 @@ def main():
             if pi.isActing:
                 gesture.random_movement()
             if pi.speaker_lang == 'cn':
-                if "换成" and "英文" in text:
+                if "换成" in text and "英文" in text:
                     pi.say("开始说英文啦")
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
                     pi.say("hello", generator=True)
-                elif "开始" and "测验" in text:
+                elif "开始" in text and "测验" in text:
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
                     attrs = list(get_quiz_info(pi, 10000))
@@ -233,15 +241,19 @@ def main():
                 elif "再见" in text:
                     pi.say("下次见")
                     exit()
+                elif "重复" in text and "英文" in text:
+                    pi.change_speaker_lang('en')
+                    pi.say(media_translation.translate_text('en', pi.last_phrase))
+                    pi.change_speaker_lang('cn')
                 else:
                     pi.say(text, generator=True)
             else:
-                if "switch" and "chinese" in text:
+                if "switch" in text and "chinese" in text:
                     pi.say("let's talk in chinese")
                     pi.change_speaker_lang('cn')
                     pi.change_listener_lang('cn')
                     pi.say("你好", generator=True)
-                elif "start" and "quiz" in text:
+                elif "start" in text and "quiz" in text:
                     # bot asks in english, user replies in chinese
                     attrs = list(get_quiz_info(pi, 10000))
                     quizzer = Quiz(pi, attrs[0], attrs[1], attrs[2])
@@ -267,6 +279,10 @@ def main():
                     if pi.isActing:
                         gesture.incorrect(3)
                         gesture.stop_robot()
+                elif "repeat" in text and "chinese" in text:
+                    pi.change_speaker_lang('cn')
+                    pi.say(media_translation.translate_text('zh-CN', pi.last_phrase))
+                    pi.change_speaker_lang('en')
                 else:
                     pi.say(text, generator=True)
             # if pi.isActing:

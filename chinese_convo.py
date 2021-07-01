@@ -14,6 +14,11 @@ def chinese_chatbot(text):
     answer = answer.replace('～', '')
     answer = answer.replace('~', '')
     answer = answer.replace('小思', '小麒麟')
+    answer = answer.replace('，', ', ')
+    if "好你妹" in answer:
+        chinese_chatbot(text)
+    if "地铁" in answer:
+        answer = "嗯嗯"
     return answer
 
 if __name__ == '__main__':

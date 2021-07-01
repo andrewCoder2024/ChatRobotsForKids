@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import six
 from google.cloud import translate_v2 as translate
 import os 
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
 
 def translate_text(target, text="hello"):
     """Translates text into the target language.
