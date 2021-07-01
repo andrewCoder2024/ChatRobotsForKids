@@ -10,6 +10,11 @@ from chinese_convo import chinese_chatbot
 import platform
 from english_convo import Chat
 
+if platform.system() == 'Linux':
+    import gesture
+else:
+    pass
+
 class Chatbot:
     def __init__(self, isActing=False, sLang='en', lLang='en'):
         self.isActing = isActing
@@ -185,7 +190,6 @@ def get_quiz_info(chatbot, limit):
 
 def main():
     if platform.system() == 'Linux':
-        import gesture
         pi = Chatbot(isActing=True)
     else:
         pi = Chatbot(isActing=False)  # add isActing = True to make robot move
