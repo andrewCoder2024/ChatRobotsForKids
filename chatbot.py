@@ -7,7 +7,7 @@ import pandas as pd
 import stt, tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
-import time
+import time, platform
 #from chatterbot import ChatBot
 #from chatterbot.trainers import ChatterBotCorpusTrainer
 from english_convo import Chat
@@ -206,7 +206,10 @@ def get_quiz_info(chatbot, limit):
 
 
 def main():
-    pi = Chatbot() # add isActing = True to make robot move
+    if platform.system() == 'Linux':
+        pi = Chatbot(isActing=True)
+    else:
+        pi = Chatbot()  # add isActing = True to make robot move
     if pi.isActing:
         gesture.random_movement()
     pi.say("Hello, welcome back!", 1.1)
