@@ -7,34 +7,18 @@ import pandas as pd
 import stt, tts
 # from DiabloGPT import Chat
 from chinese_convo import chinese_chatbot
-import time, platform
-#from chatterbot import ChatBot
-#from chatterbot.trainers import ChatterBotCorpusTrainer
+import platform
 from english_convo import Chat
 
 class Chatbot:
     def __init__(self, isActing=False, sLang='en', lLang='en'):
         self.isActing = isActing
-        if self.isActing:
-            import gesture
         self.listener = stt.Listener(isActing)
         self.speaker = tts.Speaker(isActing)
-        # self.chat = Chat()
         self.speaker_lang = sLang
         self.listener_lang = lLang
         self.chat = Chat(language='en')
         self.last_phrase = None
-        #self.chat = ChatBot('Raspberry Pi')
-       # self.trainer = ChatterBotCorpusTrainer(self.chat)
-        #self.training()
-
-    def training(self):
-        # Train the chatbot based on the english corpus
-        self.trainer.train("chatterbot.corpus.english")
-        # Train based on english greetings corpus
-        self.trainer.train("chatterbot.corpus.english.greetings")
-        # Train based on the english conversations corpus
-        self.trainer.train("chatterbot.corpus.english.conversations")
 
     def say(self, text, speed=1, generator=False):
         response = ""
@@ -42,13 +26,7 @@ class Chatbot:
             if self.speaker_lang == 'cn':
                 response = chinese_chatbot(text)
             else:
-                #response = str(self.chat.get_response(text))
-                #print("response:",response)
-                #self.speaker.speak(response, speed)
                 response = self.chat.converse(text)
-                #self.speaker.speak(text, speed)
-                # self.chat.raw(text) # from GPT
-                # self.speaker.speak(self.chat.generated_text(), speed)
             print("response:", response)
             self.speaker.speak(response)
             self.last_phrase = response
@@ -207,9 +185,10 @@ def get_quiz_info(chatbot, limit):
 
 def main():
     if platform.system() == 'Linux':
+        import gesture
         pi = Chatbot(isActing=True)
     else:
-        pi = Chatbot()  # add isActing = True to make robot move
+        pi = Chatbot(isActing=False)  # add isActing = True to make robot move
     if pi.isActing:
         gesture.random_movement()
     pi.say("Hello, welcome back!", 1.1)
@@ -288,9 +267,6 @@ def main():
                     pi.change_speaker_lang('en')
                 else:
                     pi.say(text, generator=True)
-            # if pi.isActing:
-            #     gesture.random_movement()
-            # time.sleep(0.2)
     except KeyboardInterrupt:
         pass
 
