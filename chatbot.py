@@ -9,11 +9,13 @@ import stt, tts
 from chinese_convo import chinese_chatbot
 import platform
 from english_convo import Chat
+import pinyin
 
 if platform.system() == 'Linux':
     import gesture
 else:
     pass
+
 
 class Chatbot:
     def __init__(self, isActing=False, sLang='en', lLang='en'):
@@ -67,7 +69,7 @@ class Quiz():
         self.chatbot = chatbot
 
     def get_words(self):
-        hsk = pd.read_csv("hsk_csv-master/hsk{}.csv".format(self.level), names=['chinese', 'pinyin', 'english'])
+        hsk = pd.read_json("json/hsk-level-{}_new.json".format(self.level))
         self.word_list = hsk.iloc[self.pos:self.pos + self.num_words, :]
         if self.quiz_list.empty:
             self.quiz_list = self.word_list
@@ -87,21 +89,23 @@ class Quiz():
         score = {}
         Quiz.get_words(self)
         for index, row in self.quiz_list.iterrows():
-            temp_li.append((row['chinese'], row['english']))
+            temp_li.append((row['hanzi'], row['translations']))
         while temp_li or not num:
             random.shuffle(temp_li)
             score[num] = 0
-            repeat_keywords = ["repeat", "say that again", "didn't catch that", "can you repeat", "重复一遍", "重复", "再说一遍", ""]
+            repeat_keywords = ["repeat", "say that again", "didn't catch that", "can you repeat", "重复一遍", "重复", "再说一遍",
+                               ""]
             for el in temp_li:
                 user_input = ""
                 res = random.randint(0, 1)
                 if res:
                     while user_input in repeat_keywords:
                         self.chatbot.change_speaker_lang('en')
-                        self.chatbot.say("Please provide the definition of " + el[1] + " in chinese")  # el[0] is in chinese
+                        self.chatbot.say("Please provide the definition of " + ", ".join(
+                            el[1]) + " in chinese")  # el[0] is in chinese
                         self.chatbot.change_listener_lang('cn')
                         user_input = self.chatbot.listen()
-                    if el[0] in user_input:
+                    if pinyin.get(user_input) in [pinyin.get(e) for e in el[0]]:
                         score[num] += 1
                         temp_li.remove(el)
                         if self.chatbot.isActing:
@@ -123,7 +127,7 @@ class Quiz():
                         self.chatbot.say("请用英文说 " + el[0])
                         self.chatbot.change_listener_lang('en')
                         user_input = self.chatbot.listen()
-                    if el[1] in user_input:
+                    if user_input in el[1] or "to "+user_input in el[1]:
                         score[num] += 1
                         temp_li.remove(el)
                         if self.chatbot.isActing:

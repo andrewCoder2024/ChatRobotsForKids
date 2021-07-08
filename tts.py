@@ -12,10 +12,10 @@ class Speaker:
         if isActing:
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/pi/ChatRobotsForKids/key.json"
         else:
-            #os.environ[
-            #    "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
             os.environ[
-                "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/momoe/Documents/GitHub/ChatRobotsForKids/key.json"
+                "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
+            #os.environ[
+            #    "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/momoe/Documents/GitHub/ChatRobotsForKids/key.json"
         self.lang = lang
         self.voice_params = gtts.VoiceSelectionParams(
             language_code='en-US', name="en-US-Wavenet-F"

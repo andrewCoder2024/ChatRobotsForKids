@@ -1,7 +1,9 @@
 import google.cloud.texttospeech as tts
 import os
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/audio/key.json"
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/audio/key.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
+
 
 def text_to_wav(voice_name: str, text: str):
     language_code = "-".join(voice_name.split("-")[:2])
@@ -22,6 +24,7 @@ def text_to_wav(voice_name: str, text: str):
         print(f'Generated speech saved to "{filename}"')
 
     return filename
-    
+
+
 os.system("play -q " + text_to_wav("cmn-CN-Wavenet-A", "纽约的天气怎么样？"))
 os.system("play -q " + text_to_wav("en-US-Wavenet-F", "What is the temperature in New York?"))
