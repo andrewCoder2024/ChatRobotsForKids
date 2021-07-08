@@ -10,7 +10,7 @@ from chinese_convo import chinese_chatbot
 import platform
 from english_convo import Chat
 import pinyin
-
+from PIL import Image
 if platform.system() == 'Linux':
     import gesture
 else:
@@ -112,15 +112,17 @@ class Quiz():
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            self.chatbot.change_speaker_lang('en')
-                            self.chatbot.say("Good Job!", 1.2)
+                            Image.open("correct.png").show()
+                        self.chatbot.change_speaker_lang('en')
+                        self.chatbot.say("Good Job!", 1.2)
                     else:
                         if self.chatbot.isActing:
                             gesture.incorrect(2)
                             gesture.stop_robot()
                         else:
-                            self.chatbot.change_speaker_lang('en')
-                            self.chatbot.say("Try again next time...", 0.8)
+                            Image.open('incorrect.png').show()
+                        self.chatbot.change_speaker_lang('en')
+                        self.chatbot.say("Try again next time...", 0.8)
                 else:
                     while user_input in repeat_keywords:
                         self.chatbot.change_speaker_lang('cn')
@@ -134,15 +136,17 @@ class Quiz():
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            self.chatbot.change_speaker_lang('cn')
-                            self.chatbot.say("恭喜，你答对了！", 0.8)
+                            Image.open("correct.png").show()
+                        self.chatbot.change_speaker_lang('cn')
+                        self.chatbot.say("恭喜，你答对了！", 0.8)
                     else:
                         if self.chatbot.isActing:
                             gesture.incorrect(2)
                             gesture.stop_robot()
-                        else:
-                            self.chatbot.change_speaker_lang('cn')
-                            self.chatbot.say("下次再努力", 0.8)
+                        else
+                            Image.open("incorrect.png").show()
+                        self.chatbot.change_speaker_lang('cn')
+                        self.chatbot.say("下次再努力", 0.8)
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')
@@ -150,6 +154,8 @@ class Quiz():
             self.chatbot.say("You got a score of {} in #{} test".format(s, n))
             if self.chatbot.isActing:
                 gesture.pass_quiz() if s > .8 else gesture.fail_quiz()
+            else:
+                Image.open("pass_quiz.png").show() if s > .8 else Image.open("fail_quiz.png").show()
             n += 1
 
 
@@ -265,10 +271,14 @@ def main():
                     if pi.isActing:
                         gesture.correct(3)
                         gesture.stop_robot()
+                    else:
+                        Image.open("correct.png").show()
                 elif "say no" in text:
                     if pi.isActing:
                         gesture.incorrect(3)
                         gesture.stop_robot()
+                    else:
+                        Image.open("incorrect.png").show()
                 elif "repeat" in text and "chinese" in text:
                     pi.change_speaker_lang('cn')
                     pi.say(media_translation.translate_text('zh-CN', pi.last_phrase))
