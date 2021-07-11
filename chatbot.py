@@ -11,10 +11,21 @@ import platform
 from english_convo import Chat
 import pinyin
 from PIL import Image
+import pickle
+
 if platform.system() == 'Linux':
     import gesture
 else:
     pass
+
+new_words_per_hsk_lvl = {
+    1: 150,
+    2: 150,
+    3: 300,
+    4: 600,
+    5: 1300,
+    6: 2500
+}
 
 
 class Chatbot:
@@ -59,11 +70,13 @@ class Chatbot:
         self.listener_lang = lang
 
 
-class Quiz():
-    def __init__(self, chatbot, num_words=10, level=1, pos=0):
-        self.pos = pos
-        self.num_words = num_words
-        self.level = level
+class Quiz:
+    def __init__(self, chatbot, user_file):
+        print(user_file)
+        self.user_file = user_file
+        self.pos = user_file["pos"]
+        self.num_words = user_file["num_words"]
+        self.level = user_file["level"]
         self.word_list = pd.DataFrame
         self.quiz_list = pd.DataFrame
         self.chatbot = chatbot
@@ -79,9 +92,14 @@ class Quiz():
         self.pos += self.num_words
 
     def iter_output(self):
-        for word in self.quiz_list.iterrows():
-            for el in word:
-                self.chatbot.say(el)
+        temp_li = []
+        for index, row in self.quiz_list.iterrows():
+            temp_li.append((row['hanzi'], row['translations']))
+            for el in temp_li:
+                self.chatbot.change_speaker_lang('cn')
+                self.chatbot.say(el[0])
+                self.chatbot.change_speaker_lang('en')
+                self.chatbot.say("The definitions of the word are as follows: " + el[1])
 
     def init_quiz(self):
         num = 0
@@ -90,12 +108,20 @@ class Quiz():
         Quiz.get_words(self)
         for index, row in self.quiz_list.iterrows():
             temp_li.append((row['hanzi'], row['translations']))
+        for el in temp_li:
+            self.chatbot.change_speaker_lang('cn')
+            self.chatbot.say(el[0])
+            self.chatbot.change_speaker_lang('en')
+            self.chatbot.say("The definitions of the word are as follows: " + ", ".join(
+                el[1]))
         while temp_li or not num:
             random.shuffle(temp_li)
-            score[num] = 0
+            score[num] = [0, 0]
             repeat_keywords = ["repeat", "say that again", "didn't catch that", "can you repeat", "重复一遍", "重复", "再说一遍",
                                ""]
+            exit_keywords = ["exit", "quit", "推出"]
             for el in temp_li:
+                score[num][1] += 1
                 user_input = ""
                 res = random.randint(0, 1)
                 if res:
@@ -105,14 +131,17 @@ class Quiz():
                             el[1]) + " in chinese")  # el[0] is in chinese
                         self.chatbot.change_listener_lang('cn')
                         user_input = self.chatbot.listen()
-                    if pinyin.get(user_input) in [pinyin.get(e) for e in el[0]]:
-                        score[num] += 1
+                    if user_input in exit_keywords:
+                        return
+                    elif pinyin.get(user_input) in [pinyin.get(e) for e in el[0]] \
+                            or pinyin.get(user_input) in pinyin.get(el[0]):
+                        score[num][0] += 1
                         temp_li.remove(el)
                         if self.chatbot.isActing:
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            Image.open("correct.png").show()
+                            Image.open("images/correct.png").show()
                         self.chatbot.change_speaker_lang('en')
                         self.chatbot.say("Good Job!", 1.2)
                     else:
@@ -120,7 +149,7 @@ class Quiz():
                             gesture.incorrect(2)
                             gesture.stop_robot()
                         else:
-                            Image.open('incorrect.png').show()
+                            Image.open('images/incorrect.png').show()
                         self.chatbot.change_speaker_lang('en')
                         self.chatbot.say("Try again next time...", 0.8)
                 else:
@@ -129,73 +158,82 @@ class Quiz():
                         self.chatbot.say("请用英文说 " + el[0])
                         self.chatbot.change_listener_lang('en')
                         user_input = self.chatbot.listen()
-                    if user_input in el[1] or "to "+user_input in el[1]:
-                        score[num] += 1
+                    if user_input in exit_keywords:
+                        return
+                    if user_input in el[1] or "to " + user_input in el[1]:
+                        score[num][0] += 1
                         temp_li.remove(el)
                         if self.chatbot.isActing:
                             gesture.correct(2)
                             gesture.stop_robot()
                         else:
-                            Image.open("correct.png").show()
+                            Image.open("images/correct.png").show()
                         self.chatbot.change_speaker_lang('cn')
                         self.chatbot.say("恭喜，你答对了！", 0.8)
                     else:
                         if self.chatbot.isActing:
                             gesture.incorrect(2)
                             gesture.stop_robot()
-                        else
-                            Image.open("incorrect.png").show()
+                        else:
+                            Image.open("images/incorrect.png").show()
                         self.chatbot.change_speaker_lang('cn')
                         self.chatbot.say("下次再努力", 0.8)
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')
+        print(score)
         for s in score:
-            self.chatbot.say("You got a score of {} in #{} test".format(s, n))
+            self.chatbot.say("You got a score of {:.2f}% in test #{}".format((score[s][0]/score[s][1])*100, n))
             if self.chatbot.isActing:
                 gesture.pass_quiz() if s > .8 else gesture.fail_quiz()
             else:
-                Image.open("pass_quiz.png").show() if s > .8 else Image.open("fail_quiz.png").show()
+                Image.open("images/pass_quiz.jpeg").show() if s > .8 else Image.open("images/fail_quiz.jpeg").show()
             n += 1
+        self.user_file["pos"] = self.pos
+        pickle.dump(self.user_file, open("Users/{}".format(self.user_file["username"]), 'wb'))
 
 
-def get_quiz_info(chatbot, limit):
+def get_quiz_info(chatbot, username):
     error_msg = "Invalid input, please try again"
-    invalid = invalid2 = invalid3 = True
-    level = 0
-    num_words = 0
-    pos = 0
-    while invalid:
-        chatbot.say("Please answer in English. What is your hsk level?")
-        temp = chatbot.listen()
-        try:
-            if 1 <= int(temp) <= 6:
-                level = int(temp)
-                invalid = False
-            else:
+    invalid = invalid2 = True
+    try:
+        user_file = pickle.load(open("Users/{}".format(username), 'rb'))
+    except:
+        level = 0
+        num_words = 0
+        while invalid:
+            chatbot.say("Please answer in English. What is your hsk level?")
+            temp = chatbot.listen()
+            try:
+                if 1 <= int(temp) <= 6:
+                    level = int(temp)
+                    invalid = False
+                else:
+                    chatbot.say(error_msg)
+            except ValueError:
                 chatbot.say(error_msg)
-        except ValueError:
-            chatbot.say(error_msg)
-    while invalid2:
-        chatbot.say("How many words would you like to learn a session?")
-        temp = chatbot.listen()
-        try:
-            num_words = int(temp)
-            if num_words > limit:
-                chatbot.say(error_msg)
-            else:
-                invalid2 = False
-        except ValueError:
-            chatbot.say(error_msg)
-    while invalid3:
-        chatbot.say("How many words did you leave off at last time?")
-        temp = chatbot.listen()
-        try:
-            pos = int(temp)
-            invalid3 = False
-        except ValueError:
-            chatbot.say(error_msg)
-    return num_words, level, pos
+        while invalid2:
+            chatbot.say("How many words would you like to learn a session?")
+            temp = chatbot.listen()
+            try:
+                num_words = int(temp)
+                if num_words > new_words_per_hsk_lvl[int(level)]:
+                    chatbot.say(error_msg)
+                else:
+                    invalid2 = False
+            except ValueError:
+                chatbot.say(error_msg + ", too many words for your level. There are only {} different words to learn "
+                                        "for hsk {}".format(str(new_words_per_hsk_lvl[int(level)]), level))
+        # while invalid3:
+        #    chatbot.say("How many words did you leave off at last time?")
+        #    temp = chatbot.listen()
+        #    try:
+        #       pos = int(temp)
+        #        invalid3 = False
+        #    except ValueError:
+        #        chatbot.say(error_msg)
+        user_file = {"pos": 0, "level": level, "num_words": num_words, "username": username}
+    return user_file
 
 
 def main():
@@ -205,7 +243,10 @@ def main():
         pi = Chatbot(isActing=False)  # add isActing = True to make robot move
     if pi.isActing:
         gesture.random_movement()
-    pi.say("Hello, welcome back!", 1.1)
+    pi.say("Who am I speaking to right now?", 1.1)
+    username = pi.listen()
+    pi.say("Hello {}, welcome back!".format(username))
+    user_file = get_quiz_info(pi, username)
     try:
         while True:
             text = pi.listen()
@@ -221,8 +262,7 @@ def main():
                 elif "开始" in text and "测验" in text:
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
-                    attrs = list(get_quiz_info(pi, 10000))
-                    quizzer = Quiz(pi, attrs[0], attrs[1], attrs[2])
+                    quizzer = Quiz(pi, user_file)
                     quizzer.init_quiz()
                     pi.change_speaker_lang('cn')
                     pi.change_listener_lang('cn')
@@ -251,8 +291,7 @@ def main():
                     pi.say("你好", generator=True)
                 elif "start" in text and "quiz" in text:
                     # bot asks in english, user replies in chinese
-                    attrs = list(get_quiz_info(pi, 10000))
-                    quizzer = Quiz(pi, attrs[0], attrs[1], attrs[2])
+                    quizzer = Quiz(pi, user_file)
                     quizzer.init_quiz()
                     pi.change_speaker_lang('en')
                     pi.change_listener_lang('en')
@@ -272,13 +311,13 @@ def main():
                         gesture.correct(3)
                         gesture.stop_robot()
                     else:
-                        Image.open("correct.png").show()
+                        Image.open("images/correct.png").show()
                 elif "say no" in text:
                     if pi.isActing:
                         gesture.incorrect(3)
                         gesture.stop_robot()
                     else:
-                        Image.open("incorrect.png").show()
+                        Image.open("images/incorrect.png").show()
                 elif "repeat" in text and "chinese" in text:
                     pi.change_speaker_lang('cn')
                     pi.say(media_translation.translate_text('zh-CN', pi.last_phrase))
