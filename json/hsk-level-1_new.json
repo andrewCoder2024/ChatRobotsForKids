@@ -6,7 +6,6 @@
       "translations": [
          "to love",
          "affection",
-         "to be fond of",
          "to like"
       ]
    },
@@ -24,7 +23,8 @@
       "hanzi": "爸爸",
       "pinyin": "bà ba",
       "translations": [
-         "informal father"
+         "father",
+         "dad"
       ]
    },
    {
@@ -38,13 +38,12 @@
    },
    {
       "id": 5,
-      "hanzi": "北京",
-      "pinyin": "Běi jīng",
+      "hanzi": "不",
+      "pinyin": "bù",
       "translations": [
-         "Beijing",
-         "capital of People's Republic of China",
-         "Peking",
-         "PRC government"
+         "negative prefix",
+         "not",
+         "no"
       ]
    },
    {
@@ -80,12 +79,13 @@
    },
    {
       "id": 8,
-      "hanzi": "不",
-      "pinyin": "bù",
+      "hanzi": "北京",
+      "pinyin": "Běi jīng",
       "translations": [
-         "negative prefix",
-         "not",
-         "no"
+         "Beijing",
+         "capital of People's Republic of China",
+         "Peking",
+         "PRC government"
       ]
    },
    {

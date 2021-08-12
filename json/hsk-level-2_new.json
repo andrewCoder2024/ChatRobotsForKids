@@ -4,10 +4,8 @@
       "hanzi": "吧",
       "pinyin": "ba",
       "translations": [
-         "modal particle indicating suggestion or surmise",
-         "...right?",
-         "...OK?",
-         "...I presume."
+         "suggestion",
+         "surmise"
       ]
    },
    {
@@ -15,27 +13,7 @@
       "hanzi": "白",
       "pinyin": "bái",
       "translations": [
-         "white",
-         "snowy",
-         "pure",
-         "bright",
-         "empty",
-         "blank",
-         "plain",
-         "clear",
-         "to make clear",
-         "in vain",
-         "gratuitous",
-         "free of charge",
-         "reactionary",
-         "anti-communist",
-         "funeral",
-         "to stare coldly",
-         "to write wrong character",
-         "to state",
-         "to explain",
-         "vernacular",
-         "spoken lines in opera"
+         "white"
       ]
    },
    {
@@ -43,7 +21,7 @@
       "hanzi": "百",
       "pinyin": "bǎi",
       "translations": [
-         "hundred",
+         "100",
          "numerous",
          "all kinds of"
       ]
@@ -53,7 +31,6 @@
       "hanzi": "帮助",
       "pinyin": "bāng zhù",
       "translations": [
-         "assistance",
          "aid",
          "to help",
          "to assist"
@@ -65,7 +42,6 @@
       "pinyin": "bào zhǐ",
       "translations": [
          "newspaper",
-         "newsprint"
       ]
    },
    {
