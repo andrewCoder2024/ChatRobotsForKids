@@ -183,7 +183,7 @@ class Quiz:
                         self.chatbot.change_speaker_lang('cn')
                         self.chatbot.say("下次再努力", 0.8)
                         self.chatbot.change_speaker_lang('en')
-                        self.chatbot.say("The english definition is "+el[1],.8)
+                        self.chatbot.say("The english definition is "+el[1][0],.8)
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')
