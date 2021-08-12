@@ -59,7 +59,7 @@ class Chatbot:
         except:
             response = "i didn't quite hear you, can you repeat it?"
         print("You:", response)
-        return response
+        return response.lower()
 
     def change_speaker_lang(self, lang='en'):
         self.speaker.change_lang(lang)
@@ -152,6 +152,10 @@ class Quiz:
                             Image.open('images/incorrect.png').show()
                         self.chatbot.change_speaker_lang('en')
                         self.chatbot.say("Try again next time...", 0.8)
+                        self.chatbot.say("Accepted definitions are as follows",.8)
+                        self.chatbot.change_speaker_lang('cn')
+                        self.chatbot.say(el[0])
+
                 else:
                     while user_input in repeat_keywords:
                         self.chatbot.change_speaker_lang('cn')
@@ -178,6 +182,8 @@ class Quiz:
                             Image.open("images/incorrect.png").show()
                         self.chatbot.change_speaker_lang('cn')
                         self.chatbot.say("下次再努力", 0.8)
+                        self.chatbot.change_speaker_lang('en')
+                        self.chatbot.say("The english definition is "+el[1],.8)
             num += 1
         n = 1
         self.chatbot.change_speaker_lang('en')

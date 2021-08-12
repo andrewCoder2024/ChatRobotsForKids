@@ -2,9 +2,10 @@
 
 import six
 from google.cloud import translate_v2 as translate
-import os 
+import os
 
-#os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
+
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/pi/ChatRobotsForKids/key.json"
 
 def translate_text(target, text="hello"):
     """Translates text into the target language.
@@ -23,8 +24,8 @@ def translate_text(target, text="hello"):
     result = translate_client.translate(text, target_language=target)
     result = result["translatedText"].replace("&#39;", "'")
     return result
-    
-    
+
+
 if __name__ == "__main__":
     print(translate_text("en", "你好，今天天气怎么样"))
     print(translate_text("zh-CN", "hello"))

@@ -2,19 +2,22 @@ from __future__ import division
 
 from ctypes import *
 from contextlib import contextmanager
-#import speech_recognition as sr
+# import speech_recognition as sr
 import os
 import json
 
-#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
-#os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/home/pi/ChatRobotsForKids/key.json"
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS']="/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
 
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+
 
 def py_error_handler(filename, line, function, err, fmt):
     pass
 
+
 c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+
 
 @contextmanager
 def noalsaerr():
@@ -22,6 +25,7 @@ def noalsaerr():
     asound.snd_lib_error_set_handler(c_error_handler)
     yield
     asound.snd_lib_error_set_handler(None)
+
 
 import re
 import sys
@@ -148,25 +152,26 @@ def listen_print_loop(responses):
             num_chars_printed = len(transcript)
 
         else:
-            
+
             return transcript + overwrite_chars
 
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
-            #if re.search(r"\b(exit|quit)\b", transcript, re.I):
+            # if re.search(r"\b(exit|quit)\b", transcript, re.I):
             #    print("Exiting..")
             #    break
 
-            #num_chars_printed = 0
+            # num_chars_printed = 0
+
 
 class Listener():
-    def __init__(self, isActing = False, lang = 'en') -> None:
+    def __init__(self, isActing=False, lang='en') -> None:
         if isActing:
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/pi/ChatRobotsForKids/key.json"
         else:
             os.environ[
                 "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/andrewlustig/Documents/GitHub/ChatRobotsForKids/key.json"
-            #os.environ[
+            # os.environ[
             #    "GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/momoe/Documents/GitHub/ChatRobotsForKids/key.json"
         self.lang = lang
         self.client = speech.SpeechClient()
@@ -174,12 +179,12 @@ class Listener():
             encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
             sample_rate_hertz=RATE,
             language_code="en-US",
-        )   
+        )
         self.streaming_config = speech.StreamingRecognitionConfig(
             config=self.config, interim_results=True
-            )
+        )
         self.isActing = isActing
-    
+
     def listens(self):
         try:
             if self.isActing:
@@ -209,8 +214,8 @@ class Listener():
                     return listen_print_loop(responses)
 
         except KeyboardInterrupt:
-            pass    
-    
+            pass
+
     def change_lang(self, lang):
         self.lang = lang
         if self.lang == 'en':
@@ -221,10 +226,11 @@ class Listener():
             encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
             sample_rate_hertz=RATE,
             language_code=language_code,
-        )   
+        )
         self.streaming_config = speech.StreamingRecognitionConfig(
             config=self.config, interim_results=True
         )
+
 
 if __name__ == "__main__":
     pi = Listener()
