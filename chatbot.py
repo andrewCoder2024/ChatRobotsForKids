@@ -251,8 +251,16 @@ def main():
         gesture.random_movement()
     pi.say("Who am I speaking to right now?", 1.1)
     username = pi.listen()
-    pi.say("Hello {}, welcome back!".format(username))
+    pi.say("Hello {}!".format(username))
     user_file = get_quiz_info(pi, username)
+    pi.say("It's very nice to meet you! I would like to introduce myself to you {}! "
+           "My name is qilin, and I go to NYU Shangahi. "
+           "I'm here to help you learn Chinese! I can do a number of things. If you want to take a quiz, "
+           "just say the words start quiz. If you want to find out how to say something in Chinese, say the word "
+           "Translate. "
+           "If you want to speak to me in Chinese, say the words switch to Chinese. "
+           "I also have some other commands, but Andrew will tell you the rest!")
+
     try:
         while True:
             text = pi.listen()
